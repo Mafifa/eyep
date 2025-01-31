@@ -7,25 +7,18 @@ const schema = {
   autoStart: true
 }
 
-interface storeType {
-  work: number
-  shortBreak: number
-  longBreak: number
-  autoStart: number
-}
-
-const store = new Store({ schema })
+const store = new Store({ defaults: schema })
 
 export default function handleStore() {
   const getAllSettings = () => {
     return store.store
   }
 
-  const saveSettings = (key: keyof storeType, value: any) => {
+  const saveSettings = (key: keyof PomodoroSettings, value: any) => {
     return store.set(key, value)
   }
 
-  const getSetting = (key: keyof storeType) => {
+  const getSetting = (key: keyof PomodoroSettings) => {
     return store.get(key)
   }
 
