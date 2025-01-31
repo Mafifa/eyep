@@ -14,30 +14,20 @@ interface storeType {
   autoStart: number
 }
 
-function handleStore() {
-  const getSettings = () => {}
+const store = new Store({ schema })
 
-  const saveSettings = () => {}
-
-  return { getSettings, saveSettings }
-}
-
-export default class SettingsStore {
-  store: Store
-
-  constructor() {
-    this.store = new Store<storeType>({
-      default: schema
-    })
+export default function handleStore() {
+  const getAllSettings = () => {
+    return store.store
   }
 
-  // No se por queda estos errores en teoria deberia de estar bien
-
-  getSettings(): typeof schema {
-    return this.store.get(key)
+  const saveSettings = (key: keyof storeType, value: any) => {
+    return store.set(key, value)
   }
 
-  saveSettings(settings: Partial<typeof schema>): void {
-    this.store.set(settings)
+  const getSetting = (key: keyof storeType) => {
+    return store.get(key)
   }
+
+  return { getSetting, saveSettings, getAllSettings }
 }
