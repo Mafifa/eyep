@@ -1,30 +1,16 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import handleStore from './SettingsStore'
-interface IPomodoroTimer {
-  startTimer(): void
-  stopTimer(): void
-  resetTimer(): void
-  changeSession(session: SessionType): void
-  updateSetting(newSettings: keyof PomodoroSettings, value: any): void
-  getState(): PomodoroState
-}
+import SettingsStore from './SettingsStore'
 
-export default class PomodoroTimer implements IPomodoroTimer {
+export default class PomodoroTimer {
   private settings: PomodoroSettings
   private state: PomodoroState
   private timerId: NodeJS.Timeout | null = null
   private lastTickTimestamp: number
-  private accumulatedTime: number = 0
+  private settingsStore: SettingsStore
 
   constructor() {
-    const savedSettings = handleStore().getAllSettings()
-
-    this.settings = {
-      work: savedSettings.work,
-      shortBreak: savedSettings.shortBreak,
-      longBreak: savedSettings.longBreak,
-      autoStart: savedSettings.autoStart
-    }
+    this.settingsStore = new SettingsStore()
+    this.settings = this.settingsStore.getSettings()
 
     this.state = {
       timeLeft: this.settings.work,
@@ -36,17 +22,12 @@ export default class PomodoroTimer implements IPomodoroTimer {
 
     this.lastTickTimestamp = Date.now()
     this.setupIPC()
-    console.log('PomodoroTimer initialized with settings:', this.settings)
   }
 
   private setupIPC(): void {
-    ipcMain.handle('get-initial-settings', () => {
-      console.log('Sending initial settings to renderer')
-      return this.settings
-    })
+    ipcMain.handle('get-initial-state', () => this.getState())
 
-    ipcMain.on('pomodoro-action', (_, action: { type: string; payload?: any }) => {
-      console.log('Received pomodoro action:', action)
+    ipcMain.on('pomodoro-action', (_, action: PomodoroAction) => {
       switch (action.type) {
         case 'START_STOP':
           this.toggleTimer()
@@ -60,7 +41,7 @@ export default class PomodoroTimer implements IPomodoroTimer {
           }
           break
         case 'UPDATE_SETTING':
-          this.updateSetting(action.payload.key, action.payload.value)
+          this.updateSettings(action.payload as Partial<PomodoroSettings>)
           break
       }
     })
@@ -74,20 +55,17 @@ export default class PomodoroTimer implements IPomodoroTimer {
     this.state.isRunning ? this.stopTimer() : this.startTimer()
   }
 
-  public startTimer(): void {
+  private startTimer(): void {
     if (!this.state.isRunning) {
-      console.log('Starting timer')
       this.state.isRunning = true
       this.lastTickTimestamp = Date.now()
-      this.accumulatedTime = 0
-      this.timerId = setInterval(() => this.tick(), 100)
+      this.timerId = setInterval(() => this.tick(), 1000)
       this.emitState()
     }
   }
 
-  public stopTimer(): void {
+  private stopTimer(): void {
     if (this.timerId) {
-      console.log('Stopping timer')
       clearInterval(this.timerId)
       this.timerId = null
     }
@@ -95,30 +73,24 @@ export default class PomodoroTimer implements IPomodoroTimer {
     this.emitState()
   }
 
-  public resetTimer(): void {
-    console.log('Resetting timer')
+  private resetTimer(): void {
     this.stopTimer()
     this.state = {
       ...this.state,
       timeLeft: this.settings.work,
       currentSession: 'work',
-      sessionsCompleted: 0,
-      isRunning: false
+      sessionsCompleted: 0
     }
     this.emitState()
   }
 
   private tick(): void {
     const now = Date.now()
-    const elapsed = now - this.lastTickTimestamp
-    this.accumulatedTime += elapsed
+    const elapsed = Math.floor((now - this.lastTickTimestamp) / 1000)
 
-    if (this.accumulatedTime >= 1000) {
-      const secondsToSubtract = Math.floor(this.accumulatedTime / 1000)
-      this.state.timeLeft = Math.max(0, this.state.timeLeft - secondsToSubtract)
-      this.accumulatedTime %= 1000
-
-      console.log(`Tick: ${this.state.currentSession}, Time left: ${this.state.timeLeft}`)
+    if (elapsed >= 1) {
+      this.state.timeLeft -= elapsed
+      this.lastTickTimestamp = now
 
       if (this.state.timeLeft <= 0) {
         this.handleSessionEnd()
@@ -126,23 +98,18 @@ export default class PomodoroTimer implements IPomodoroTimer {
 
       this.emitState()
     }
-
-    this.lastTickTimestamp = now
   }
 
   private handleSessionEnd(): void {
-    console.log(`Session ended: ${this.state.currentSession}`)
     if (this.state.currentSession === 'work') {
       this.state.sessionsCompleted++
-      console.log(`Sessions completed: ${this.state.sessionsCompleted}`)
-      if (this.state.sessionsCompleted % 4 === 0) {
-        this.changeSession('longBreak')
-      } else {
-        this.changeSession('shortBreak')
-      }
+      this.state.currentSession =
+        this.state.sessionsCompleted % 4 === 0 ? 'longBreak' : 'shortBreak'
     } else {
-      this.changeSession('work')
+      this.state.currentSession = 'work'
     }
+
+    this.state.timeLeft = this.settings[this.state.currentSession]
 
     if (!this.settings.autoStart && this.state.currentSession !== 'work') {
       this.stopTimer()
@@ -151,40 +118,31 @@ export default class PomodoroTimer implements IPomodoroTimer {
     }
   }
 
-  public changeSession(session: SessionType): void {
-    console.log(`Changing session to: ${session}`)
+  private changeSession(session: SessionType): void {
     this.state.currentSession = session
     this.state.timeLeft = this.settings[session]
     this.emitState()
   }
 
-  public updateSetting(newSettings: keyof PomodoroSettings, value: any): void {
-    console.log('Updating setting:', newSettings)
+  private updateSettings(newSettings: Partial<PomodoroSettings>): void {
+    this.settings = { ...this.settings, ...newSettings }
+    this.settingsStore.saveSettings(this.settings)
 
-    handleStore().saveSettings(newSettings, value)
-
-    if (this.state.isRunning) {
-      this.stopTimer()
+    if (this.state.currentSession === 'work') {
+      this.state.timeLeft = this.settings.work
     }
 
-    this.state.timeLeft = this.settings[this.state.currentSession]
     this.state.settings = this.settings
-
-    if (this.state.isRunning) {
-      this.startTimer()
-    } else {
-      this.emitState()
-    }
+    this.emitState()
   }
 
   private emitState(): void {
     const windows = BrowserWindow.getAllWindows()
     windows.forEach((window) => {
       if (!window.isDestroyed()) {
-        window.webContents.send('pomodoro-update', this.state)
+        window.webContents.send('pomodoro-update', this.getState())
       }
     })
-    console.log('Emitted state:', this.state)
   }
 
   public getState(): PomodoroState {

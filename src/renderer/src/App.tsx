@@ -21,22 +21,16 @@ export const PRESETS = {
 }
 
 type PresetKey = keyof typeof PRESETS
-type TimerMode = "work" | "shortBreak" | "longBreak"
 
 export default function App () {
-  const [preset, setPreset] = useState<PresetKey>("CLASSIC")
-  const [mode, setMode] = useState<TimerMode>("work")
-  const [isRunning, setIsRunning] = useState(false)
-  const [time, setTime] = useState(PRESETS.CLASSIC.work)
+  const [state, setState] = useState<PomodoroState | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
-  const [settings, setSettings] = useState({
-    workTime: { minutes: 25, seconds: 0 },
-    shortBreakTime: { minutes: 5, seconds: 0 },
-    longBreakTime: { minutes: 15, seconds: 0 },
-    soundEnabled: true,
-    autoStartBreaks: false,
-  })
+
+  useEffect(() => {
+    window.api.getInitialState().then(setState)
+    window.api.onUpdate(setState)
+  }, [])
 
   useEffect(() => {
     const root = window.document.documentElement
@@ -47,6 +41,8 @@ export default function App () {
     }
   }, [isDarkMode])
 
+  if (!state) return null
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -54,26 +50,16 @@ export default function App () {
   }
 
   const handlePresetChange = (newPreset: PresetKey) => {
-    setPreset(newPreset)
-    setMode("work")
-    setIsRunning(false)
-    setTime(PRESETS[newPreset].work)
+    window.api.sendAction({ type: 'UPDATE_SETTING', payload: PRESETS[newPreset] })
   }
 
-  const handleModeChange = (newMode: TimerMode) => {
-    setMode(newMode)
-    setIsRunning(false)
-    setTime(PRESETS[preset][newMode])
+  const handleModeChange = (newMode: SessionType) => {
+    window.api.sendAction({ type: 'CHANGE_SESSION', payload: newMode })
   }
 
-  const handleSettingsSave = (newSettings: typeof settings) => {
-    setSettings(newSettings)
+  const handleSettingsSave = (newSettings: PomodoroSettings) => {
+    window.api.sendAction({ type: 'UPDATE_SETTING', payload: newSettings })
     setIsSettingsOpen(false)
-    // Update current timer if needed
-    if (mode === "work") setTime(newSettings.workTime.minutes * 60 + newSettings.workTime.seconds)
-    else if (mode === "shortBreak")
-      setTime(newSettings.shortBreakTime.minutes * 60 + newSettings.shortBreakTime.seconds)
-    else if (mode === "longBreak") setTime(newSettings.longBreakTime.minutes * 60 + newSettings.longBreakTime.seconds)
   }
 
   return (
@@ -93,7 +79,9 @@ export default function App () {
             >
               <button
                 onClick={() => handlePresetChange(presetKey)}
-                className={`px-4 py-2 rounded-full font-medium transition-all duration-200 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 ${preset === presetKey
+                className={`px-4 py-2 rounded-full font-medium transition-all duration-200 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 ${state.settings.work === PRESETS[presetKey].work &&
+                  state.settings.shortBreak === PRESETS[presetKey].shortBreak &&
+                  state.settings.longBreak === PRESETS[presetKey].longBreak
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                   }`}
@@ -104,14 +92,14 @@ export default function App () {
           ))}
         </div>
 
-        <div className="text-8xl font-light my-8">{formatTime(time)}</div>
+        <div className="text-8xl font-light my-8">{formatTime(state.timeLeft)}</div>
 
         <div className="flex justify-center space-x-4 w-full">
           <button
-            onClick={() => setIsRunning(!isRunning)}
+            onClick={() => window.api.sendAction({ type: 'START_STOP' })}
             className="w-16 h-16 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
           >
-            {isRunning ? (
+            {state.isRunning ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -143,10 +131,7 @@ export default function App () {
             )}
           </button>
           <button
-            onClick={() => {
-              setIsRunning(false)
-              handleModeChange(mode)
-            }}
+            onClick={() => window.api.sendAction({ type: 'RESET' })}
             className="w-16 h-16 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-50"
           >
             <svg
@@ -164,7 +149,7 @@ export default function App () {
             </svg>
           </button>
           <button
-            onClick={() => handleModeChange(mode === "work" ? "shortBreak" : "work")}
+            onClick={() => handleModeChange(state.currentSession === "work" ? "shortBreak" : "work")}
             className="w-16 h-16 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-50"
           >
             <svg
@@ -251,17 +236,16 @@ export default function App () {
         </button>
 
         <div className="absolute top-4 left-4 text-sm font-medium text-muted-foreground">
-          {isRunning ? `${mode.charAt(0).toUpperCase() + mode.slice(1)} in progress` : "Ready"}
+          {state.isRunning ? `${state.currentSession.charAt(0).toUpperCase() + state.currentSession.slice(1)} in progress` : "Ready"}
         </div>
       </div>
 
       <SettingsWindow
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        settings={settings}
+        settings={state.settings}
         onSave={handleSettingsSave}
       />
     </div>
   )
 }
-

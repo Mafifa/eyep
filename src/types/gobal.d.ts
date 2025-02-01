@@ -2,7 +2,7 @@ declare global {
   type SessionType = 'work' | 'shortBreak' | 'longBreak'
 
   type PomodoroAction = {
-    type: 'START_STOP' | 'RESET' | 'CHANGE_SESSION' | 'UPDATE_SETTINGS'
+    type: 'START_STOP' | 'RESET' | 'CHANGE_SESSION' | 'UPDATE_SETTING'
     payload?: SessionType | Partial<PomodoroSettings>
   }
 

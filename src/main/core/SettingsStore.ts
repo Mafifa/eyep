@@ -1,26 +1,26 @@
 import Store from 'electron-store'
 
-const schema = {
+const schema: PomodoroSettings = {
   work: 1500,
   shortBreak: 300,
   longBreak: 900,
   autoStart: true
 }
 
-const store = new Store({ defaults: schema })
+export default class SettingsStore {
+  private store: Store<PomodoroSettings>
 
-export default function handleStore() {
-  const getAllSettings = () => {
-    return store.store
+  constructor() {
+    this.store = new Store<PomodoroSettings>({
+      defaults: schema
+    })
   }
 
-  const saveSettings = (key: keyof PomodoroSettings, value: any) => {
-    return store.set(key, value)
+  getSettings(): PomodoroSettings {
+    return this.store.store
   }
 
-  const getSetting = (key: keyof PomodoroSettings) => {
-    return store.get(key)
+  saveSettings(settings: Partial<PomodoroSettings>): void {
+    this.store.set(settings)
   }
-
-  return { getSetting, saveSettings, getAllSettings }
 }

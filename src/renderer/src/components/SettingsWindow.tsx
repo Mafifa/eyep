@@ -1,31 +1,14 @@
 import { useState, useEffect } from "react"
 
-interface Time {
-  minutes: number
-  seconds: number
-}
-
 interface SettingsWindowProps {
   isOpen: boolean
   onClose: () => void
-  settings: {
-    workTime: Time
-    shortBreakTime: Time
-    longBreakTime: Time
-    soundEnabled: boolean
-    autoStartBreaks: boolean
-  }
-  onSave: (newSettings: {
-    workTime: Time
-    shortBreakTime: Time
-    longBreakTime: Time
-    soundEnabled: boolean
-    autoStartBreaks: boolean
-  }) => void
+  settings: PomodoroSettings
+  onSave: (newSettings: PomodoroSettings) => void
 }
 
 export function SettingsWindow ({ isOpen, onClose, settings, onSave }: SettingsWindowProps) {
-  const [localSettings, setLocalSettings] = useState(settings)
+  const [localSettings, setLocalSettings] = useState<PomodoroSettings>(settings)
 
   useEffect(() => {
     setLocalSettings(settings)
@@ -34,20 +17,16 @@ export function SettingsWindow ({ isOpen, onClose, settings, onSave }: SettingsW
   if (!isOpen) return null
 
   const handleTimeChange = (
-    key: "workTime" | "shortBreakTime" | "longBreakTime", // <- Restringe a claves de Time
-    field: "minutes" | "seconds",
+    key: keyof Pick<PomodoroSettings, "work" | "shortBreak" | "longBreak">,
     value: number
   ) => {
     setLocalSettings((prev) => ({
       ...prev,
-      [key]: {
-        ...prev[key], // Ahora TypeScript sabe que prev[key] es un objeto Time
-        [field]: value,
-      },
-    }));
-  };
+      [key]: value * 60, // Convert minutes to seconds
+    }))
+  }
 
-  const handleToggle = (key: "soundEnabled" | "autoStartBreaks") => {
+  const handleToggle = (key: "autoStart") => {
     setLocalSettings((prev) => ({
       ...prev,
       [key]: !prev[key],
@@ -78,56 +57,35 @@ export function SettingsWindow ({ isOpen, onClose, settings, onSave }: SettingsW
         </div>
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div className="space-y-4">
-            {(["workTime", "shortBreakTime", "longBreakTime"] as const).map((key) => (
+            {(["work", "shortBreak", "longBreak"] as const).map((key) => (
               <div key={key} className="flex items-center justify-between">
                 <label className="text-sm font-medium">
-                  {key === "workTime" ? "Work" : key === "shortBreakTime" ? "Short Break" : "Long Break"}
+                  {key === "work" ? "Work" : key === "shortBreak" ? "Short Break" : "Long Break"}
                 </label>
                 <div className="flex items-center space-x-1">
                   <input
                     type="number"
-                    value={localSettings[key].minutes}
-                    onChange={(e) => handleTimeChange(key, "minutes", Number(e.target.value))}
+                    value={Math.floor(localSettings[key] / 60)}
+                    onChange={(e) => handleTimeChange(key, Number(e.target.value))}
                     className="w-12 px-1 py-0.5 bg-muted text-foreground rounded-md text-center text-sm"
-                    min={0}
-                    max={59}
+                    min={1}
+                    max={120}
                   />
-                  <span className="text-xs">:</span>
-                  <input
-                    type="number"
-                    value={localSettings[key].seconds}
-                    onChange={(e) => handleTimeChange(key, "seconds", Number(e.target.value))}
-                    className="w-12 px-1 py-0.5 bg-muted text-foreground rounded-md text-center text-sm"
-                    min={0}
-                    max={59}
-                  />
+                  <span className="text-xs">min</span>
                 </div>
               </div>
             ))}
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Sound</span>
-              <button
-                onClick={() => handleToggle("soundEnabled")}
-                className={`w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background ${localSettings.soundEnabled ? "bg-primary dark:bg-primary/80" : "bg-muted dark:bg-muted/30"
-                  }`}
-              >
-                <span
-                  className={`block w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${localSettings.soundEnabled ? "translate-x-6" : "translate-x-1"
-                    }`}
-                />
-              </button>
-            </div>
-            <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Auto-start breaks</span>
               <button
-                onClick={() => handleToggle("autoStartBreaks")}
-                className={`w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background ${localSettings.autoStartBreaks ? "bg-primary dark:bg-primary/80" : "bg-muted dark:bg-muted/30"
+                onClick={() => handleToggle("autoStart")}
+                className={`w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background ${localSettings.autoStart ? "bg-primary dark:bg-primary/80" : "bg-muted dark:bg-muted/30"
                   }`}
               >
                 <span
-                  className={`block w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${localSettings.autoStartBreaks ? "translate-x-6" : "translate-x-1"
+                  className={`block w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${localSettings.autoStart ? "translate-x-6" : "translate-x-1"
                     }`}
                 />
               </button>
@@ -146,4 +104,3 @@ export function SettingsWindow ({ isOpen, onClose, settings, onSave }: SettingsW
     </div>
   )
 }
-

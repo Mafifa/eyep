@@ -4,12 +4,11 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import PomodoroTimer from './core/pomodoroTimer'
 
-// Create a new instance of the PomodoroTimer class
-const pomodoroTimer = new PomodoroTimer()
+let mainWindow: BrowserWindow
 
 function createWindow(): void {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  // Create the browser window
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -53,11 +52,15 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.handle('mensaje-al-main', (event, mensaje) => {
+    console.log('Mensaje desde renderer:', mensaje)
+    return 'Respuesta desde main'
+  })
+
+  // Create a new instance of the PomodoroTimer class
+  const pomodoroTimer = new PomodoroTimer()
 
   createWindow()
-  pomodoroTimer.startTimer()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
