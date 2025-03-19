@@ -3,15 +3,22 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import PomodoroTimer from './core/pomodoroTimer'
+import { screen } from 'electron'
 
-let mainWindow: BrowserWindow
+let mainWindow: BrowserWindow | null = null
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const pomodoroTimer = new PomodoroTimer()
 
 function createWindow(): void {
-  // Create the browser window
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 540,
+    height: 310,
+    maxHeight: 310,
+    maxWidth: 540,
     show: false,
+    frame: false,
+    fullscreen: true,
+    transparent: true,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -21,7 +28,7 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow!.show()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -29,18 +36,68 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  // IPC handlers
+  ipcMain.on('close-app', () => {
+    app.quit()
+  })
+
+  ipcMain.on('minimize-app', () => {
+    mainWindow?.minimize()
+  })
+
+  ipcMain.on('toggle-transparency', (_event, isTransparent) => {
+    if (mainWindow) {
+      mainWindow.setIgnoreMouseEvents(isTransparent)
+      mainWindow.webContents.send('transparency-changed', isTransparent)
+    }
+  })
+
+  ipcMain.on('set-draggable', (_, draggable) => {
+    if (mainWindow) {
+      mainWindow.setMovable(draggable)
+    }
+  })
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
+let topWindow: BrowserWindow | null = null
+
+function createTopWindow(): void {
+  const { width } = screen.getPrimaryDisplay().workAreaSize
+  const windowWidth = 300
+  const windowHeight = 60
+
+  topWindow = new BrowserWindow({
+    width: windowWidth,
+    height: windowHeight,
+    x: Math.floor((width - windowWidth) / 2),
+    y: 20,
+    alwaysOnTop: true,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false
+    }
+  })
+
+  const filePath = join(__dirname, '../../src/renderer/eyes/index.html')
+
+  console.log(filePath)
+
+  topWindow.loadFile(filePath)
+}
+
+// Update app.whenReady() block
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
@@ -52,21 +109,8 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  ipcMain.handle('mensaje-al-main', (event, mensaje) => {
-    console.log('Mensaje desde renderer:', mensaje)
-    return 'Respuesta desde main'
-  })
-
-  // Create a new instance of the PomodoroTimer class
-  const pomodoroTimer = new PomodoroTimer()
-
   createWindow()
-
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
+  createTopWindow() // Add this line
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -77,6 +121,3 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
-
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.
