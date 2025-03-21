@@ -1,11 +1,14 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import PomodoroTimer from './core/pomodoroTimer'
-import { screen } from 'electron'
 
 let mainWindow: BrowserWindow | null = null
+let topWindow: BrowserWindow | null = null
+let cursorTrackingInterval: NodeJS.Timeout | null = null
+let lastMousePos = { x: 0, y: 0 }
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const pomodoroTimer = new PomodoroTimer()
 
@@ -65,24 +68,16 @@ function createWindow(): void {
   })
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-let topWindow: BrowserWindow | null = null
-
 function createTopWindow(): void {
   const { width } = screen.getPrimaryDisplay().workAreaSize
-  const windowWidth = 300
-  const windowHeight = 60
 
   topWindow = new BrowserWindow({
-    width: windowWidth,
-    height: windowHeight,
-    x: Math.floor((width - windowWidth) / 2),
-    y: 20,
+    width: 540,
+    height: 310,
+    skipTaskbar: true,
     alwaysOnTop: true,
-    frame: false,
-    transparent: true,
+    frame: true,
+    transparent: false,
     resizable: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -90,11 +85,58 @@ function createTopWindow(): void {
     }
   })
 
-  const filePath = join(__dirname, '../../src/renderer/eyes/index.html')
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    topWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/eyes.html`)
+  } else {
+    topWindow.loadFile(join(__dirname, '../renderer/eyes.html'))
+  }
+  // start the following
+  topWindow.webContents.on('did-finish-load', () => {
+    startCursorTracking()
+  })
+}
 
-  console.log(filePath)
+// Función para iniciar el seguimiento del cursor
+function startCursorTracking(): void {
+  console.log('Iniciando seguimiento del cursor')
 
-  topWindow.loadFile(filePath)
+  cursorTrackingInterval = setInterval(() => {
+    if (topWindow && !topWindow.isDestroyed()) {
+      try {
+        const mousePos = screen.getCursorScreenPoint()
+
+        if (mousePos.x !== lastMousePos.x || mousePos.y !== lastMousePos.y) {
+          lastMousePos = mousePos
+
+          const windowBounds = topWindow.getBounds()
+          const relativePos = {
+            x: mousePos.x - windowBounds.x,
+            y: mousePos.y - windowBounds.y,
+            isInWindow:
+              mousePos.x >= windowBounds.x &&
+              mousePos.x <= windowBounds.x + windowBounds.width &&
+              mousePos.y >= windowBounds.y &&
+              mousePos.y <= windowBounds.y + windowBounds.height,
+            globalX: mousePos.x,
+            globalY: mousePos.y
+          }
+
+          topWindow.webContents.send('cursor-position', relativePos)
+          mainWindow?.webContents.send('cursor-position', relativePos)
+          console.log(relativePos)
+        }
+      } catch (error) {
+        console.error('Error al rastrear el cursor:', error)
+      }
+    }
+  }, 16)
+
+  app.on('before-quit', () => {
+    if (cursorTrackingInterval) {
+      clearInterval(cursorTrackingInterval)
+      cursorTrackingInterval = null
+    }
+  })
 }
 
 // Update app.whenReady() block
@@ -117,6 +159,10 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  if (cursorTrackingInterval) {
+    clearInterval(cursorTrackingInterval)
+    cursorTrackingInterval = null
+  }
   if (process.platform !== 'darwin') {
     app.quit()
   }

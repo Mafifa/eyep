@@ -1,16 +1,18 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-// Custom APIs for renderer
 const api = {
   getInitialState: () => ipcRenderer.invoke('get-initial-state'),
   sendAction: (action) => ipcRenderer.send('pomodoro-action', action),
-  onUpdate: (callback) => ipcRenderer.on('pomodoro-update', (_, state) => callback(state))
+  onUpdate: (callback) => ipcRenderer.on('pomodoro-update', (_, state) => callback(state)),
+  closeApp: () => ipcRenderer.send('close-app'),
+  minimizeApp: () => ipcRenderer.send('minimize-app'),
+  toggleTransparency: (isTransparent) => ipcRenderer.send('toggle-transparency', isTransparent),
+  onTransparencyChanged: (callback) =>
+    ipcRenderer.on('transparency-changed', (_, isTransparent) => callback(isTransparent)),
+  setDraggable: (draggable) => ipcRenderer.send('set-draggable', draggable)
 }
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)

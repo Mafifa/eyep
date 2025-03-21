@@ -1,7 +1,6 @@
-import './assets/main-assets/main.css'
-
+import './assets/eyes-assets/eyes-main.css'
 import ReactDOM from 'react-dom/client'
-import App from './App'
+import { App } from './Eyes-App'
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <App />

@@ -74,3 +74,11 @@
     @apply bg-accent text-accent-foreground hover:bg-accent/90;
   }
 }
+
+/* Add this at the end of the file */
+html,
+body,
+#root {
+  overflow: hidden;
+  border-radius: 24px;
+}

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react"
 
+
+
 interface SettingsWindowProps {
   isOpen: boolean
   onClose: () => void
@@ -34,7 +36,7 @@ export function SettingsWindow ({ isOpen, onClose, settings, onSave }: SettingsW
   }
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div className="fixed bg-transparent inset-0 z-50 flex items-center justify-center">
       <div className="bg-card text-card-foreground w-[540px] h-[310px] p-6 rounded-3xl shadow-lg border border-border">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Settings</h2>
