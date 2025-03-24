@@ -1,16 +1,34 @@
-import { useState } from "react"
-import { Angry, Meh } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 import EyesComponent from "./components/eyes-components/eyes-component"
-import { Button } from "./components/eyes-components/custom-buttom"
-import { SuspiciousIcon } from "./components/eyes-components/icons/suspicious-icon"
-import { SleepingIcon } from "./components/eyes-components/icons/sleeping-ico"
 
 export function App () {
   const [emotion, setEmotion] = useState<"normal" | "angry" | "suspicious" | "sleeping">("normal")
+  const emotionRef = useRef(emotion);
+
+  useEffect(() => {
+    emotionRef.current = emotion;
+  }, [emotion]);
+
+  useEffect(() => {
+    const handleEmotionChange = (_event, newEmotion: 'normal' | 'suspicious' | 'angry') => {
+      setEmotion(prev => {
+        // Forzar re-render incluso si el estado es el mismo
+        if (prev === newEmotion) return `${newEmotion}-force` as typeof emotion;
+        console.log(newEmotion);
+        return newEmotion;
+      });
+    };
+
+    window.electron.ipcRenderer.on('emotion-change', handleEmotionChange);
+
+    return () => {
+      window.electron.ipcRenderer.removeListener('emotion-change', handleEmotionChange);
+    };
+  }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="mb-8 relative">
+    <main className="flex flex-col items-center justify-center p-12 scale-75">
+      <div className="relative">
         {/* Eyebrows for different emotions */}
         {(emotion === "angry" || emotion === "suspicious") && (
           <div className="absolute top-0 left-0 w-full flex justify-center gap-8">
@@ -31,37 +49,6 @@ export function App () {
 
         {/* Eyes Component */}
         <EyesComponent emotion={emotion} />
-      </div>
-
-      <div className="flex gap-2 mt-8">
-        <Button
-          onClick={() => setEmotion("normal")}
-          variant={emotion === "normal" ? "default" : "outline"}
-          className="flex gap-2"
-        >
-          <Meh className="h-4 w-4" /> Normal
-        </Button>
-        <Button
-          onClick={() => setEmotion("angry")}
-          variant={emotion === "angry" ? "default" : "outline"}
-          className="flex gap-2"
-        >
-          <Angry className="h-4 w-4" /> Molesto
-        </Button>
-        <Button
-          onClick={() => setEmotion("suspicious")}
-          variant={emotion === "suspicious" ? "default" : "outline"}
-          className="flex gap-2"
-        >
-          <SuspiciousIcon /> Sospechando
-        </Button>
-        <Button
-          onClick={() => setEmotion("sleeping")}
-          variant={emotion === "sleeping" ? "default" : "outline"}
-          className="flex gap-2"
-        >
-          <SleepingIcon /> Descansando
-        </Button>
       </div>
     </main>
   )
