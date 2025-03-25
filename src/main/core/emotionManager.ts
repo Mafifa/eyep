@@ -19,7 +19,6 @@ export class EmotionManager {
 
   public manageEmotions(mouseMoved: boolean): void {
     const now = Date.now()
-
     if (mouseMoved) {
       this.handleMovement(now)
     } else {
@@ -29,10 +28,10 @@ export class EmotionManager {
 
   private handleMovement(timestamp: number): void {
     this.lastMovement = timestamp
+    this.cancelEscalation()
 
     switch (this.current) {
       case 'angry':
-        this.cancelEscalation()
         if (!this.stepDownInitiated) {
           this.stepDownInitiated = true
           this.stepDownTimer = setTimeout(() => {
@@ -42,7 +41,6 @@ export class EmotionManager {
         }
         break
       case 'suspicious':
-        this.cancelEscalation()
         if (!this.stepDownInitiated) {
           this.stepDownInitiated = true
           this.stepDownTimer = setTimeout(() => {
@@ -59,14 +57,10 @@ export class EmotionManager {
 
     switch (this.current) {
       case 'normal':
-        if (inactiveTime >= 60000) {
-          this.updateEmotion('suspicious', 'normal')
-        }
+        if (inactiveTime >= 60000) this.updateEmotion('suspicious', 'normal')
         break
       case 'suspicious':
-        if (this.source === 'normal' && inactiveTime >= 90000) {
-          this.updateEmotion('angry', 'suspicious')
-        }
+        if (inactiveTime >= 90000) this.updateEmotion('angry', 'suspicious')
         break
     }
   }
@@ -74,13 +68,13 @@ export class EmotionManager {
   private updateEmotion(newEmotion: EmotionState, source: EmotionState): void {
     if (this.current === newEmotion) return
 
-    this.cancelAllTimers()
+    this.cancelEscalation()
     this.stepDownInitiated = false
 
     this.current = newEmotion
     this.source = source
 
-    if (newEmotion === 'suspicious' && source === 'normal') {
+    if (newEmotion === 'suspicious') {
       this.escalationTimer = setTimeout(() => {
         this.updateEmotion('angry', 'suspicious')
       }, 90000)
@@ -94,13 +88,10 @@ export class EmotionManager {
     this.topWindow?.webContents.send('emotion-change', emotion)
   }
 
-  private cancelAllTimers(): void {
-    clearTimeout(this.escalationTimer!)
-    clearTimeout(this.stepDownTimer!)
-  }
-
   private cancelEscalation(): void {
-    clearTimeout(this.escalationTimer!)
-    this.escalationTimer = null
+    if (this.escalationTimer) {
+      clearTimeout(this.escalationTimer)
+      this.escalationTimer = null
+    }
   }
 }

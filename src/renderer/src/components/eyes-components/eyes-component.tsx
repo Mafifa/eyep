@@ -13,7 +13,6 @@ export default function EyesComponent ({ emotion }: EyesComponentProps) {
 
   useEffect(() => {
     const handleCursorPosition = (_event, mousePosition) => {
-      console.log('Mouse Position:', mousePosition)
       setMousePosition({ x: mousePosition.x, y: mousePosition.y })
       setIsMouseMoving(true)
 

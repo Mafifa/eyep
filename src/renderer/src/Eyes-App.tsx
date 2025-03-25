@@ -14,7 +14,6 @@ export function App () {
       setEmotion(prev => {
         // Forzar re-render incluso si el estado es el mismo
         if (prev === newEmotion) return `${newEmotion}-force` as typeof emotion;
-        console.log(newEmotion);
         return newEmotion;
       });
     };
