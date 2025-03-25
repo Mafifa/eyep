@@ -22,6 +22,21 @@ export const PRESETS = {
 
 type PresetKey = keyof typeof PRESETS
 
+interface PomodoroState {
+  timeLeft: number
+  isRunning: boolean
+  currentSession: SessionType
+  settings: PomodoroSettings
+}
+
+type SessionType = "work" | "shortBreak" | "longBreak"
+
+interface PomodoroSettings {
+  work: number
+  shortBreak: number
+  longBreak: number
+}
+
 export default function App () {
   const [state, setState] = useState<PomodoroState | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -29,7 +44,7 @@ export default function App () {
   const [isTransparent, setIsTransparent] = useState(false)
 
   const toggleTransparency = useCallback(() => {
-    setIsTransparent(prev => {
+    setIsTransparent((prev) => {
       const newState = !prev
       window.api.toggleTransparency(newState)
       return newState
@@ -42,15 +57,15 @@ export default function App () {
     window.api.onTransparencyChanged(setIsTransparent)
 
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key === 'p') {
+      if (event.ctrlKey && event.key === "p") {
         toggleTransparency()
       }
     }
 
-    window.addEventListener('keydown', handleKeyPress)
+    window.addEventListener("keydown", handleKeyPress)
 
     return () => {
-      window.removeEventListener('keydown', handleKeyPress)
+      window.removeEventListener("keydown", handleKeyPress)
     }
   }, [toggleTransparency])
 
@@ -76,28 +91,45 @@ export default function App () {
   }
 
   const handlePresetChange = (newPreset: PresetKey) => {
-    window.api.sendAction({ type: 'UPDATE_SETTING', payload: PRESETS[newPreset] })
+    window.api.sendAction({ type: "UPDATE_SETTING", payload: PRESETS[newPreset] })
   }
 
   const handleModeChange = (newMode: SessionType) => {
-    window.api.sendAction({ type: 'CHANGE_SESSION', payload: newMode })
+    window.api.sendAction({ type: "CHANGE_SESSION", payload: newMode })
   }
 
   const handleSettingsSave = (newSettings: PomodoroSettings) => {
-    window.api.sendAction({ type: 'UPDATE_SETTING', payload: newSettings })
+    window.api.sendAction({ type: "UPDATE_SETTING", payload: newSettings })
     setIsSettingsOpen(false)
   }
 
   return (
-    <div className={`flex flex-col items-center bg-card text-card-foreground w-[540px] h-[310px] p-6 rounded-3xl shadow-lg border border-border ${isTransparent ? 'bg-transparent' : 'bg-background'} text-foreground transition-all duration-300 overflow-hidden`}>
-      <div className={`w-full h-full flex flex-col items-center p-2 justify-center relative overflow-hidden ${isTransparent ? 'bg-opacity-30 backdrop-blur-sm' : 'bg-card'} transition-all duration-300`}>
-        <div className="absolute top-2 right-2 flex space-x-2">
+    <div
+      className={`flex flex-col items-center bg-card text-card-foreground w-[540px] h-[310px] rounded-3xl shadow-lg border border-border ${isTransparent ? "bg-transparent" : "bg-background"} text-foreground transition-all duration-300 overflow-hidden`}
+    >
+      {/* Title Bar - Draggable Area */}
+      <div
+        className={`w-full h-10 flex items-center justify-between px-4 ${isTransparent ? "bg-transparent" : "bg-primary/10"} drag`} // This makes the div draggable in Electron
+      >
+        <div className="flex items-center">
+          <div className="w-3 h-3 rounded-full bg-primary mr-2"></div>
+          <span className={`text-sm font-medium ${isTransparent ? "text-white" : "text-primary"}`}>Pomodoro Timer</span>
+        </div>
+
+        <div className="flex space-x-2" style={{ WebkitAppRegion: "no-drag" }}>
+          {" "}
+          {/* Make buttons not draggable */}
           <button
             onClick={() => window.api.minimizeApp()}
             className="w-6 h-6 rounded-full bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center transition-colors duration-200"
           >
             <span className="sr-only">Minimize</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-yellow-900" viewBox="0 0 20 20" fill="currentColor">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-3 w-3 text-yellow-900"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
               <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
             </svg>
           </button>
@@ -106,12 +138,25 @@ export default function App () {
             className="w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors duration-200"
           >
             <span className="sr-only">Close</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-red-900" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-3 w-3 text-red-900"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
+      </div>
 
+      <div
+        className={`w-full h-full flex flex-col items-center p-2 justify-center relative overflow-hidden ${isTransparent ? "bg-opacity-30 backdrop-blur-sm" : "bg-card"} transition-all duration-300`}
+      >
         {!isTransparent && (
           <div className="flex justify-center space-x-4 w-full mb-4">
             {(Object.keys(PRESETS) as PresetKey[]).map((presetKey) => (
@@ -141,12 +186,14 @@ export default function App () {
           </div>
         )}
 
-        <div className={`text-8xl font-light mb-8 ${isTransparent ? 'text-white' : ''}`}>{formatTime(state.timeLeft)}</div>
+        <div className={`text-8xl font-light mb-8 ${isTransparent ? "text-white" : ""}`}>
+          {formatTime(state.timeLeft)}
+        </div>
 
         {!isTransparent && (
           <div className="flex justify-center space-x-4 w-full">
             <button
-              onClick={() => window.api.sendAction({ type: 'START_STOP' })}
+              onClick={() => window.api.sendAction({ type: "START_STOP" })}
               className="w-16 h-16 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
             >
               {state.isRunning ? (
@@ -181,7 +228,7 @@ export default function App () {
               )}
             </button>
             <button
-              onClick={() => window.api.sendAction({ type: 'RESET' })}
+              onClick={() => window.api.sendAction({ type: "RESET" })}
               className="w-16 h-16 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-50"
             >
               <svg
@@ -291,7 +338,14 @@ export default function App () {
         )}
 
         <div className="absolute top-4 left-4 text-sm font-medium text-muted-foreground">
-          {state.isRunning ? `${state.currentSession.charAt(0).toUpperCase() + state.currentSession.slice(1)} in progress` : "Ready"}
+          {state.isRunning
+            ? (
+              <div className="flex flex-col items-center">
+                <span>{state.currentSession.charAt(0).toUpperCase() + state.currentSession.slice(1)}</span>
+                <span className="text-center">in progress</span>
+              </div>
+            )
+            : "Ready"}
         </div>
       </div>
 
@@ -304,3 +358,4 @@ export default function App () {
     </div>
   )
 }
+

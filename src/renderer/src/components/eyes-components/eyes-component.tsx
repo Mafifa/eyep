@@ -35,6 +35,7 @@ export default function EyesComponent ({ emotion }: EyesComponentProps) {
     }
   }, [])
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const calculateEyePosition = (eyeRef: HTMLDivElement | null, isLeftEye: boolean) => {
     if (!eyeRef || !isMouseMoving || emotion === "sleeping") return { x: 0, y: 0 }
 

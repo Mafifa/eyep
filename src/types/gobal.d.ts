@@ -5,7 +5,6 @@ declare global {
     type: 'START_STOP' | 'RESET' | 'CHANGE_SESSION' | 'UPDATE_SETTING'
     payload?: SessionType | Partial<PomodoroSettings>
   }
-
   export interface PomodoroSettings {
     work: number
     shortBreak: number
@@ -21,5 +20,4 @@ declare global {
     settings: PomodoroSettings
   }
 }
-
 export {}

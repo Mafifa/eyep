@@ -82,3 +82,11 @@ body,
   overflow: hidden;
   border-radius: 24px;
 }
+
+.drag {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: drag;
+}

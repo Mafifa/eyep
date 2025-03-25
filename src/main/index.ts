@@ -1,15 +1,24 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app as electronApp, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { electronApp as electronToolkitApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import PomodoroTimer from './core/pomodoroTimer'
 import { startCursorTracking } from './core/cursorTracker'
 import { EmotionManager } from './core/emotionManager'
+import { TrayManager } from './core/trayManager'
+
+interface ExtendedApp extends Electron.App {
+  isQuiting: boolean
+}
+
+const app: ExtendedApp = Object.assign(electronApp, {
+  isQuiting: false
+})
+
 let mainWindow: BrowserWindow
 let topWindow: BrowserWindow
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const pomodoroTimer = new PomodoroTimer()
+let trayManager: TrayManager
 
 function createMainWindow(): Promise<BrowserWindow> {
   return new Promise((resolve) => {
@@ -31,8 +40,17 @@ function createMainWindow(): Promise<BrowserWindow> {
     })
 
     mainWindow.on('ready-to-show', () => {
-      mainWindow!.show()
+      mainWindow.show()
       resolve(mainWindow)
+    })
+
+    mainWindow.on('close', (event) => {
+      if (!app.isQuiting) {
+        event.preventDefault()
+        mainWindow.hide()
+        trayManager.createTray()
+      }
+      return false
     })
 
     mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -46,13 +64,15 @@ function createMainWindow(): Promise<BrowserWindow> {
       mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     }
 
-    // IPC handlers
     ipcMain.on('close-app', () => {
+      app.isQuiting = true
       app.quit()
     })
 
     ipcMain.on('minimize-app', () => {
-      mainWindow?.minimize()
+      mainWindow?.hide()
+      topWindow?.hide()
+      trayManager.createTray()
     })
 
     ipcMain.on('toggle-transparency', (_event, isTransparent) => {
@@ -90,10 +110,8 @@ function createTopWindow(): Promise<BrowserWindow> {
       }
     })
 
-    // Hacer la ventana clickeable a través de ella
     topWindow.setIgnoreMouseEvents(true, { forward: true })
 
-    // Center the window at the top of the screen
     const x = Math.round((width - 330) / 2)
     const y = -50
     topWindow.setPosition(x, y)
@@ -104,8 +122,6 @@ function createTopWindow(): Promise<BrowserWindow> {
       topWindow.loadFile(join(__dirname, '../renderer/eyes.html'))
     }
 
-    topWindow.webContents.on('did-finish-load', () => {})
-
     topWindow.on('ready-to-show', () => {
       resolve(topWindow)
     })
@@ -113,20 +129,15 @@ function createTopWindow(): Promise<BrowserWindow> {
 }
 
 app.whenReady().then(async () => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
-
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+  electronToolkitApp.setAppUserModelId('com.electron')
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // 1. Crear ambas ventanas y esperar a que estén listas
   mainWindow = await createMainWindow()
   topWindow = await createTopWindow()
 
+  trayManager = new TrayManager(mainWindow, topWindow)
   const emotionManager = new EmotionManager(mainWindow, topWindow)
 
   startCursorTracking({
@@ -137,11 +148,13 @@ app.whenReady().then(async () => {
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+app.on('before-quit', () => {
+  mainWindow?.destroy()
+  topWindow?.destroy()
 })

@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react"
-
-
-
 interface SettingsWindowProps {
   isOpen: boolean
   onClose: () => void
