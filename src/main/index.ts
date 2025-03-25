@@ -71,7 +71,6 @@ function createMainWindow(): Promise<BrowserWindow> {
 
     ipcMain.on('minimize-app', () => {
       mainWindow?.hide()
-      topWindow?.hide()
       trayManager.createTray()
     })
 
@@ -134,10 +133,14 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  ipcMain.on('pomodoro-update', (_, state) => {
+    emotionManager.setPomodoroState(state.currentSession)
+  })
+
   mainWindow = await createMainWindow()
   topWindow = await createTopWindow()
 
-  trayManager = new TrayManager(mainWindow, topWindow)
+  trayManager = new TrayManager(mainWindow, pomodoroTimer)
   const emotionManager = new EmotionManager(mainWindow, topWindow)
 
   startCursorTracking({

@@ -1,6 +1,14 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import SettingsStore from './SettingsStore'
 
+type SessionType = 'work' | 'shortBreak' | 'longBreak'
+
+type PomodoroAction =
+  | { type: 'START_STOP' }
+  | { type: 'RESET' }
+  | { type: 'CHANGE_SESSION'; payload: SessionType }
+  | { type: 'UPDATE_SETTING'; payload: Partial<PomodoroSettings> }
+
 export default class PomodoroTimer {
   private settings: PomodoroSettings
   private state: PomodoroState
@@ -16,7 +24,9 @@ export default class PomodoroTimer {
       timeLeft: this.settings.work,
       currentSession: 'work',
       isRunning: false,
-      sessionsCompleted: 0,
+      workCount: 0,
+      shortBreakCount: 0,
+      longBreakCount: 0,
       settings: this.settings
     }
 
@@ -51,8 +61,9 @@ export default class PomodoroTimer {
     return ['work', 'shortBreak', 'longBreak'].includes(session as string)
   }
 
-  private toggleTimer(): void {
+  public toggleTimer(): void {
     this.state.isRunning ? this.stopTimer() : this.startTimer()
+    this.emitState()
   }
 
   private startTimer(): void {
@@ -79,7 +90,10 @@ export default class PomodoroTimer {
       ...this.state,
       timeLeft: this.settings.work,
       currentSession: 'work',
-      sessionsCompleted: 0
+      isRunning: false,
+      workCount: 0,
+      shortBreakCount: 0,
+      longBreakCount: 0
     }
     this.emitState()
   }
@@ -101,20 +115,34 @@ export default class PomodoroTimer {
   }
 
   private handleSessionEnd(): void {
+    // Incrementar contador de la sesión actual
+    switch (this.state.currentSession) {
+      case 'work':
+        this.state.workCount++
+        break
+      case 'shortBreak':
+        this.state.shortBreakCount++
+        break
+      case 'longBreak':
+        this.state.longBreakCount++
+        break
+    }
+
+    // Determinar siguiente sesión
     if (this.state.currentSession === 'work') {
-      this.state.sessionsCompleted++
-      this.state.currentSession =
-        this.state.sessionsCompleted % 4 === 0 ? 'longBreak' : 'shortBreak'
+      this.state.currentSession = this.state.workCount % 4 === 0 ? 'longBreak' : 'shortBreak'
     } else {
       this.state.currentSession = 'work'
     }
 
+    // Configurar tiempo de la nueva sesión
     this.state.timeLeft = this.settings[this.state.currentSession]
 
-    if (!this.settings.autoStart && this.state.currentSession !== 'work') {
-      this.stopTimer()
-    } else {
+    // Lógica de auto-start modificada
+    if (this.settings.autoStart && this.state.currentSession === 'shortBreak') {
       this.startTimer()
+    } else {
+      this.stopTimer()
     }
   }
 

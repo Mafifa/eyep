@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron'
 
-type EmotionState = 'normal' | 'suspicious' | 'angry'
+type EmotionState = 'normal' | 'suspicious' | 'angry' | 'sleeping'
 
 export class EmotionManager {
   private current: EmotionState = 'normal'
@@ -9,6 +9,7 @@ export class EmotionManager {
   private stepDownTimer: NodeJS.Timeout | null = null
   private lastMovement: number = Date.now()
   private stepDownInitiated: boolean = false
+  private isBreakActive: boolean = false // Nuevo estado
 
   constructor(
     private mainWindow: BrowserWindow,
@@ -17,13 +18,44 @@ export class EmotionManager {
     this.updateEmotion('normal', 'normal')
   }
 
+  // Nuevo método para sincronizar con Pomodoro
+  public setPomodoroState(session: string): void {
+    const isBreak = ['shortBreak', 'longBreak'].includes(session)
+
+    if (isBreak && !this.isBreakActive) {
+      this.isBreakActive = true
+      this.forceEmotion('sleeping')
+    } else if (!isBreak && this.isBreakActive) {
+      this.isBreakActive = false
+      this.resetToNormal()
+    }
+  }
+
+  private forceEmotion(emotion: EmotionState): void {
+    this.cancelAllTimers()
+    this.current = emotion
+    this.sendEmotion(emotion)
+  }
+
   public manageEmotions(mouseMoved: boolean): void {
+    if (this.isBreakActive) return // Ignorar durante descansos
+
     const now = Date.now()
     if (mouseMoved) {
       this.handleMovement(now)
     } else {
       this.handleInactivity(now)
     }
+  }
+
+  private cancelAllTimers(): void {
+    this.cancelEscalation()
+    clearTimeout(this.stepDownTimer!)
+  }
+
+  private resetToNormal(): void {
+    this.forceEmotion('normal')
+    this.lastMovement = Date.now() // Reiniciar temporizadores
   }
 
   private handleMovement(timestamp: number): void {

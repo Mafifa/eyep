@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react"
 import EyesComponent from "./components/eyes-components/eyes-component"
 
+type EmotionState = "normal" | "angry" | "suspicious" | "sleeping"
+
 export function App () {
   const [emotion, setEmotion] = useState<"normal" | "angry" | "suspicious" | "sleeping">("normal")
   const emotionRef = useRef(emotion);
@@ -10,7 +12,7 @@ export function App () {
   }, [emotion]);
 
   useEffect(() => {
-    const handleEmotionChange = (_event, newEmotion: 'normal' | 'suspicious' | 'angry') => {
+    const handleEmotionChange = (_event, newEmotion: EmotionState) => {
       setEmotion(prev => {
         // Forzar re-render incluso si el estado es el mismo
         if (prev === newEmotion) return `${newEmotion}-force` as typeof emotion;

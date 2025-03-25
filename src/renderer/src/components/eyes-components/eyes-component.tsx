@@ -22,7 +22,7 @@ export default function EyesComponent ({ emotion }: EyesComponentProps) {
 
       mouseTimerRef.current = setTimeout(() => {
         setIsMouseMoving(false)
-      }, 500)
+      }, 3000)
     }
 
     window.electron.ipcRenderer.on('cursor-position', handleCursorPosition)

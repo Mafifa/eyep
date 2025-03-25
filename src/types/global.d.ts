@@ -12,11 +12,13 @@ declare global {
     autoStart: boolean
   }
 
-  export interface PomodoroState {
+  interface PomodoroState {
     timeLeft: number
     currentSession: SessionType
     isRunning: boolean
-    sessionsCompleted: number
+    workCount: number
+    shortBreakCount: number
+    longBreakCount: number
     settings: PomodoroSettings
   }
 }
