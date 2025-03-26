@@ -1,10 +1,10 @@
 {
-  "name": "pomodoro-2",
+  "name": "eyep",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "A pomodoro app with Eyes tracker your mouse",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Mafifa",
+  "homepage": "https://github.com/Mafifa/eyep",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",

@@ -1,10 +1,20 @@
 import { app, BrowserWindow, Tray, Menu, ipcMain } from 'electron'
-import icon from '../../../resources/icon.png?asset'
+import icon from '../../../resources/tray.png?asset'
 import PomodoroTimer from './pomodoroTimer'
+
+interface PomodoroState {
+  timeLeft: number
+  currentSession: 'work' | 'shortBreak' | 'longBreak'
+  isRunning: boolean
+  workCount: number
+  shortBreakCount: number
+  longBreakCount: number
+  settings: PomodoroSettings
+}
 
 export class TrayManager {
   private tray: Tray | null = null
-  private currentMenu: Menu | null = null
+  private currentMenu: Menu | undefined = undefined
 
   constructor(
     private mainWindow: BrowserWindow,
@@ -35,51 +45,56 @@ export class TrayManager {
     })
   }
 
-  private updateMenu(state: any = this.pomodoroTimer.getState()): void {
+  private updateMenu(state: PomodoroState = this.pomodoroTimer.getState()): void {
     const { timeLeft, currentSession, isRunning } = state
     const minutes = Math.floor(timeLeft / 60)
     const seconds = timeLeft % 60
     const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
 
     const sessionText = {
-      work: 'Trabajo',
-      shortBreak: 'Descanso Corto',
-      longBreak: 'Descanso Largo'
+      work: 'Work',
+      shortBreak: 'Short Break',
+      longBreak: 'Long Break'
     }[currentSession]
 
     const menuTemplate = [
       {
         label: `⏳ ${formattedTime}`,
-        enabled: false
+        enabled: false,
+        type: 'normal'
       },
       {
         label: ` ${isRunning ? '▶' : '❚❚'} ${sessionText}`,
-        enabled: false
+        enabled: false,
+        type: 'normal'
       },
-      { type: 'separator' },
+      { type: 'separator' as const },
       {
-        label: isRunning ? '❚❚ Pausar' : '▶ Iniciar',
+        label: isRunning ? '❚❚ Pause' : '▶ Start',
         click: () => {
           this.pomodoroTimer.toggleTimer()
-        }
+        },
+        type: 'normal'
       },
-      { type: 'separator' },
+      { type: 'separator' as const },
       {
-        label: 'Abrir',
-        click: () => this.restoreWindow()
+        label: 'Open',
+        click: () => this.restoreWindow(),
+        type: 'normal'
       },
-      { type: 'separator' },
+      { type: 'separator' as const },
       {
-        label: 'Salir',
-        click: () => app.quit()
+        label: 'Quit',
+        click: () => app.quit(),
+        type: 'normal'
       }
     ]
 
-    this.currentMenu = Menu.buildFromTemplate(menuTemplate)
+    this.currentMenu = Menu.buildFromTemplate(menuTemplate as Electron.MenuItemConstructorOptions[])
     this.tray?.setContextMenu(this.currentMenu)
   }
 
-  private updateTooltip(state: any): void {
+  private updateTooltip(state: PomodoroState): void {
     if (!this.tray) return
 
     const { timeLeft, currentSession, isRunning } = state
@@ -88,13 +103,13 @@ export class TrayManager {
     const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
 
     const sessionText = {
-      work: 'Trabajo',
-      shortBreak: 'Descanso Corto',
-      longBreak: 'Descanso Largo'
+      work: 'Work',
+      shortBreak: 'Short Break',
+      longBreak: 'Long Break'
     }[currentSession]
 
-    const status = isRunning ? '▶ En curso' : '❚❚ Pausado'
-    const tooltip = `Pomodoro\n${formattedTime} - ${sessionText}\n${status}`
+    const status = isRunning ? '▶ In progress' : '❚❚ Paused'
+    const tooltip = `EyeP\n${formattedTime} - ${sessionText}\n${status}`
 
     this.tray.setToolTip(tooltip)
   }

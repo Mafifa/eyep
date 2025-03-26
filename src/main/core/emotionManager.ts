@@ -5,12 +5,12 @@ type EmotionState = 'normal' | 'suspicious' | 'angry' | 'sleeping'
 
 export class EmotionManager {
   private current: EmotionState = 'normal'
-  private source: EmotionState | null = null
   private escalationTimer: NodeJS.Timeout | null = null
   private stepDownTimer: NodeJS.Timeout | null = null
   private lastMovement: number = Date.now()
   private stepDownInitiated: boolean = false
-  private isBreakActive: boolean = false // Nuevo estado
+  private isBreakActive: boolean = false
+  private source: EmotionState | null = 'normal'
 
   constructor(
     private mainWindow: BrowserWindow,
@@ -109,7 +109,7 @@ export class EmotionManager {
   }
 
   private sendEmotion(emotion: EmotionState): void {
-    console.log(emotion)
+    console.log(this.source)
     this.mainWindow?.webContents.send('emotion-change', emotion)
     this.topWindow?.webContents.send('emotion-change', emotion)
   }
