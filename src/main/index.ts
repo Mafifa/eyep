@@ -133,10 +133,6 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  ipcMain.on('pomodoro-update', (_, state) => {
-    emotionManager.setPomodoroState(state.currentSession)
-  })
-
   mainWindow = await createMainWindow()
   topWindow = await createTopWindow()
 
@@ -148,6 +144,10 @@ app.whenReady().then(async () => {
     onActivity: (mouseMoved) => {
       emotionManager.manageEmotions(mouseMoved)
     }
+  })
+
+  ipcMain.on('pomodoro-update', (_, state) => {
+    emotionManager.setPomodoroState(state.currentSession)
   })
 })
 

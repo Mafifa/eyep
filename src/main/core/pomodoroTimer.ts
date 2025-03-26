@@ -48,6 +48,7 @@ export default class PomodoroTimer {
         case 'CHANGE_SESSION':
           if (this.isValidSession(action.payload)) {
             this.changeSession(action.payload)
+            this.emitState()
           }
           break
         case 'UPDATE_SETTING':
@@ -168,6 +169,7 @@ export default class PomodoroTimer {
     const windows = BrowserWindow.getAllWindows()
     windows.forEach((window) => {
       if (!window.isDestroyed()) {
+        ipcMain.emit('pomodoro-update', null, this.getState())
         window.webContents.send('pomodoro-update', this.getState())
       }
     })

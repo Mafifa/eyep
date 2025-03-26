@@ -1,3 +1,4 @@
+// EmotionManager.ts
 import { BrowserWindow } from 'electron'
 
 type EmotionState = 'normal' | 'suspicious' | 'angry' | 'sleeping'
@@ -21,7 +22,6 @@ export class EmotionManager {
   // Nuevo método para sincronizar con Pomodoro
   public setPomodoroState(session: string): void {
     const isBreak = ['shortBreak', 'longBreak'].includes(session)
-
     if (isBreak && !this.isBreakActive) {
       this.isBreakActive = true
       this.forceEmotion('sleeping')
@@ -46,11 +46,6 @@ export class EmotionManager {
     } else {
       this.handleInactivity(now)
     }
-  }
-
-  private cancelAllTimers(): void {
-    this.cancelEscalation()
-    clearTimeout(this.stepDownTimer!)
   }
 
   private resetToNormal(): void {
@@ -99,10 +94,8 @@ export class EmotionManager {
 
   private updateEmotion(newEmotion: EmotionState, source: EmotionState): void {
     if (this.current === newEmotion) return
-
     this.cancelEscalation()
     this.stepDownInitiated = false
-
     this.current = newEmotion
     this.source = source
 
@@ -116,6 +109,7 @@ export class EmotionManager {
   }
 
   private sendEmotion(emotion: EmotionState): void {
+    console.log(emotion)
     this.mainWindow?.webContents.send('emotion-change', emotion)
     this.topWindow?.webContents.send('emotion-change', emotion)
   }
@@ -125,5 +119,10 @@ export class EmotionManager {
       clearTimeout(this.escalationTimer)
       this.escalationTimer = null
     }
+  }
+
+  private cancelAllTimers(): void {
+    this.cancelEscalation()
+    clearTimeout(this.stepDownTimer!)
   }
 }

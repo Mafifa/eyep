@@ -25,9 +25,7 @@
     "@electron-toolkit/utils": "3.0.0",
     "electron-store": "8.2.0",
     "electron-updater": "6.1.7",
-    "lucide-react": "^0.483.0",
-    "node-window-manager": "^2.2.4",
-    "robotjs": "^0.6.0"
+    "lucide-react": "^0.483.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "2.0.0",

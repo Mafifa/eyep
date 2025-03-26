@@ -1,6 +1,8 @@
 declare global {
   export type SessionType = 'work' | 'shortBreak' | 'longBreak'
 
+  export type Emotion = 'normal' | 'angry' | 'suspicious' | 'sleeping'
+
   export type PomodoroAction = {
     type: 'START_STOP' | 'RESET' | 'CHANGE_SESSION' | 'UPDATE_SETTING'
     payload?: SessionType | Partial<PomodoroSettings>

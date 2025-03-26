@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 
 interface EyesComponentProps {
-  emotion: "normal" | "angry" | "suspicious" | "sleeping"
+  emotion: Emotion
 }
 
 export default function EyesComponent ({ emotion }: EyesComponentProps) {
@@ -36,8 +36,8 @@ export default function EyesComponent ({ emotion }: EyesComponentProps) {
   }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const calculateEyePosition = (eyeRef: HTMLDivElement | null, isLeftEye: boolean) => {
-    if (!eyeRef || !isMouseMoving || emotion === "sleeping") return { x: 0, y: 0 }
+  const calculateEyePosition = (eyeRef: HTMLDivElement | null, _isLeftEye: boolean) => {
+    if (!eyeRef || !isMouseMoving) return { x: 0, y: 0 }
 
     const eyeRect = eyeRef.getBoundingClientRect()
     const containerRect = containerRef.current?.getBoundingClientRect() || { left: 0, top: 0 }
@@ -51,12 +51,24 @@ export default function EyesComponent ({ emotion }: EyesComponentProps) {
     // Different max distances based on emotion
     let maxDistance = 14 // Default for normal eyes - increased for more freedom
 
-    if (emotion === "angry") {
-      maxDistance = 12
-    } else if (emotion === "suspicious") {
-      maxDistance = 10
-    } else if (emotion === "sleeping") {
-      maxDistance = 0
+    switch (emotion) {
+      case "angry":
+        maxDistance = 12
+
+        break;
+      case "suspicious":
+        maxDistance = 10
+
+        break;
+
+      case "sleeping":
+        maxDistance = 0
+
+        break;
+
+      default:
+        maxDistance = 14
+        break;
     }
 
     // Calculate distance with scaling factor - reduced divisor for more movement
