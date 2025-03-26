@@ -6,6 +6,7 @@ import PomodoroTimer from './core/pomodoroTimer'
 import { startCursorTracking } from './core/cursorTracker'
 import { EmotionManager } from './core/emotionManager'
 import { TrayManager } from './core/trayManager'
+import { initializeUpdater } from './update/updateManager'
 
 interface ExtendedApp extends Electron.App {
   isQuiting: boolean
@@ -135,6 +136,8 @@ app.whenReady().then(async () => {
 
   mainWindow = await createMainWindow()
   topWindow = await createTopWindow()
+
+  initializeUpdater(mainWindow)
 
   trayManager = new TrayManager(mainWindow, pomodoroTimer)
   const emotionManager = new EmotionManager(mainWindow, topWindow)
