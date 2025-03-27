@@ -1,4 +1,9 @@
 declare global {
+  type Action =
+    | { type: 'CHANGE_SESSION'; payload: SessionType } // Cambiar sesión
+    | { type: 'UPDATE_SETTING'; payload: Partial<PomodoroSettings> } // Actualizar configuración
+    | { type: 'START_STOP' } // Iniciar o detener el temporizador
+    | { type: 'RESET' } // Reiniciar el temporizador
   export type SessionType = 'work' | 'shortBreak' | 'longBreak'
 
   export type Emotion = 'normal' | 'angry' | 'suspicious' | 'sleeping'

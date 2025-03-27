@@ -78,6 +78,7 @@ function createMainWindow(): Promise<BrowserWindow> {
     ipcMain.on('toggle-transparency', (_event, isTransparent) => {
       if (mainWindow) {
         mainWindow.setIgnoreMouseEvents(isTransparent)
+        mainWindow.setAlwaysOnTop(isTransparent) // Mantener siempre al frente si es transparente
         mainWindow.webContents.send('transparency-changed', isTransparent)
       }
     })
@@ -151,6 +152,16 @@ app.whenReady().then(async () => {
 
   ipcMain.on('pomodoro-update', (_, state) => {
     emotionManager.setPomodoroState(state.currentSession)
+  })
+
+  ipcMain.on('set-top-draggable', (_, draggable) => {
+    if (topWindow) {
+      topWindow.setMovable(draggable)
+      topWindow.setIgnoreMouseEvents(!draggable, { forward: !draggable })
+
+      // Notificar a topWindow que actualice su estado
+      topWindow.webContents.send('update-draggable-state', draggable)
+    }
   })
 })
 

@@ -1,0 +1,6 @@
+✔ Mantener en al frente con el modo de trasparencia @done(25-03-26 21:28)
+  ✔ Centrar el estado de lo que ocurre @started(25-03-26 21:28) @done(25-03-26 21:31) @lasted(3m16s)
+  ✔ ocultar resto de elementos (borde de la pagina, titulo, cerrar y minimizar circulo rojo ) @started(25-03-26 21:37) @done(25-03-26 21:50) @lasted(13m30s)
+  ✔ Aumentar la trasparencia de los numeros cuando se esta en modo transparente @done(25-03-26 21:50)
+  ☐ Corregir el WebkitAppRegion en los estilos que saltan error
+☐ Modificar bordes de los ojos

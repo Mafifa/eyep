@@ -5,11 +5,13 @@ import EyesComponent from "./components/eyes-components/eyes-component"
 export function App () {
   const [emotion, setEmotion] = useState<Emotion>("normal")
   const emotionRef = useRef(emotion);
+  const [isDraggable, setIsDraggable] = useState(false)
 
   useEffect(() => {
     emotionRef.current = emotion;
   }, [emotion]);
 
+  // Handle Emotion
   useEffect(() => {
     const handleEmotionChange = (_event, newEmotion: Emotion) => {
 
@@ -26,6 +28,18 @@ export function App () {
       window.electron.ipcRenderer.removeListener('emotion-change', handleEmotionChange);
     };
   }, []);
+
+  useEffect(() => {
+    const handleDraggableUpdate = (_, newDraggableState) => {
+      setIsDraggable(newDraggableState)
+    }
+
+    window.electron.ipcRenderer.on('update-draggable-state', handleDraggableUpdate)
+    return () => {
+      window.electron.ipcRenderer.removeListener('update-draggable-state', handleDraggableUpdate)
+    }
+  }, [])
+
 
   return (
     <main className="flex flex-col items-center justify-center p-12 scale-75">
@@ -51,6 +65,32 @@ export function App () {
         {/* Eyes Component */}
         <EyesComponent emotion={emotion} />
       </div>
+      {isDraggable && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 0, // Posición debajo de la ventana
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 120,
+            height: 30,
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            border: '2px solid #333',
+            borderRadius: 4,
+            cursor: 'pointer',
+            WebkitAppRegion: 'drag',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 12,
+            color: '#333',
+            fontWeight: "bold"
+          } as React.CSSProperties}
+        >
+          hold & drag
+        </div>
+      )}
     </main>
   )
 }
