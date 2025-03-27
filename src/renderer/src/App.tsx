@@ -7,6 +7,7 @@ import { SessionStats } from "./components/main-components/SessionStats"
 import { ControlButtons } from "./components/main-components/ControlButtons"
 import { UtilityButtons } from "./components/main-components/UtilityButtons"
 import { SessionStatus } from "./components/main-components/SessionStatus"
+import { TransparentSessionStatus } from "./components/main-components/TransparentSessionStatus"
 
 export const PRESETS = {
   SHORT: {
@@ -28,12 +29,12 @@ export const PRESETS = {
 
 export type PresetKey = keyof typeof PRESETS
 
-
 export function App () {
   const [state, setState] = useState<PomodoroState | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(true)
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const [isTransparent, setIsTransparent] = useState(false)
+  const [isTopDraggable, setIsTopDraggable] = useState(false)
 
   const toggleTransparency = useCallback(() => {
     setIsTransparent((prev) => {
@@ -48,8 +49,8 @@ export function App () {
     window.api.onUpdate(setState)
     window.api.onTransparencyChanged(setIsTransparent)
 
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key === "p") {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.code === 'KeyP') {
         toggleTransparency()
       }
     }
@@ -73,6 +74,24 @@ export function App () {
   useEffect(() => {
     window.api.setDraggable(!isTransparent)
   }, [isTransparent])
+
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Usar e.code para detectar la tecla física
+      if (e.ctrlKey && e.code === 'KeyQ') {
+        e.preventDefault()
+        const newState = !isTopDraggable
+        setIsTopDraggable(newState)
+        console.log('se ejecuto esta accion', newState)
+        window.electron.ipcRenderer.send('set-top-draggable', newState)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isTopDraggable])
+
 
   if (!state) return null
 
@@ -108,7 +127,8 @@ export function App () {
 
   return (
     <div
-      className={`flex flex-col items-center bg-card text-card-foreground w-[540px] h-[310px] rounded-3xl shadow-lg border border-border ${isTransparent ? "bg-transparent" : "bg-background"} text-foreground transition-all duration-300 overflow-hidden`}
+      className={`flex flex-col items-center text-card-foreground w-[540px] h-[310px] rounded-3xl ${isTransparent ? "bg-transparent border-transparent shadow-none" : "bg-background border border-border shadow-lg"
+        } text-foreground transition-all duration-300 overflow-hidden`}
     >
       <TitleBar isTransparent={isTransparent} />
 
@@ -125,6 +145,10 @@ export function App () {
         )}
 
         <div className="flex flex-col items-center justify-center flex-1 space-y-2">
+          {isTransparent && (
+            <TransparentSessionStatus isRunning={state.isRunning} currentSession={state.currentSession} />
+          )}
+
           <TimerDisplay timeLeft={state.timeLeft} formatTime={formatTime} isTransparent={isTransparent} />
 
           {!isTransparent && (
@@ -154,7 +178,11 @@ export function App () {
           />
         )}
 
-        <SessionStatus isRunning={state.isRunning} currentSession={state.currentSession} />
+        <SessionStatus
+          isRunning={state.isRunning}
+          currentSession={state.currentSession}
+          isTransparent={isTransparent}
+        />
       </div>
 
       <SettingsWindow
