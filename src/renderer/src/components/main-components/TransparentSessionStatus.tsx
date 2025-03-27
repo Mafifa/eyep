@@ -7,7 +7,7 @@ interface TransparentSessionStatusProps {
 
 export const TransparentSessionStatus: React.FC<TransparentSessionStatusProps> = ({ isRunning, currentSession }) => {
   return (
-    <div className="text-white text-center mb-2">
+    <div className="text-white/20 text-center">
       {isRunning ? (
         <div className="flex flex-col items-center">
           <span className="font-extrabold text-xl tracking-wide">

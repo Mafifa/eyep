@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 
 interface ControlButtonsProps {
@@ -12,7 +10,6 @@ interface ControlButtonsProps {
 
 export const ControlButtons: React.FC<ControlButtonsProps> = ({
   isRunning,
-  currentSession,
   onStartStop,
   onReset,
   onChangeMode,

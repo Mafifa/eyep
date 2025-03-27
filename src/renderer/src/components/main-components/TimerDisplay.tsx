@@ -7,6 +7,6 @@ interface TimerDisplayProps {
 }
 
 export const TimerDisplay: React.FC<TimerDisplayProps> = ({ timeLeft, formatTime, isTransparent }) => {
-  return <div className={`text-7xl font-light ${isTransparent ? "text-white/90" : ""}`}>{formatTime(timeLeft)}</div>
+  return <div className={`text-7xl font-light ${isTransparent ? "text-white/50" : ""}`}>{formatTime(timeLeft)}</div>
 }
 
