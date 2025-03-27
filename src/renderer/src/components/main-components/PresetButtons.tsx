@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { Tooltip } from "./Tooltip"
 import { type PresetKey } from '../../App'

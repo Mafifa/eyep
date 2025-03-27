@@ -159,7 +159,7 @@ app.whenReady().then(async () => {
       topWindow.setMovable(draggable)
       topWindow.setIgnoreMouseEvents(!draggable, { forward: !draggable })
 
-      // Notificar a topWindow que actualice su estado
+      // Notify topWindow to update its state
       topWindow.webContents.send('update-draggable-state', draggable)
     }
   })

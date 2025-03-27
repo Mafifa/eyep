@@ -69,7 +69,7 @@ export function App () {
         <div
           style={{
             position: 'fixed',
-            bottom: -30, // Posición debajo de la ventana
+            bottom: -30,
             left: '50%',
             transform: 'translateX(-50%)',
             width: 120,

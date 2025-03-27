@@ -7,7 +7,7 @@ interface SessionStatusProps {
 }
 
 export const SessionStatus: React.FC<SessionStatusProps> = ({ isRunning, currentSession, isTransparent }) => {
-  // Solo para modo no transparente - se muestra en la esquina superior izquierda
+  // For non-transparent mode only - shown in the upper left corner
   if (!isTransparent) {
     return (
       <div className="absolute top-3 left-3 text-xs font-medium text-muted-foreground">
@@ -22,8 +22,7 @@ export const SessionStatus: React.FC<SessionStatusProps> = ({ isRunning, current
       </div>
     )
   }
-
-  // Para modo transparente, no retornamos nada aquí ya que se mostrará en otro lugar
+  // For transparent mode, we do not return anything here as it will be displayed elsewhere.
   return null
 }
 

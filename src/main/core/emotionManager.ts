@@ -1,4 +1,3 @@
-// EmotionManager.ts
 import { BrowserWindow } from 'electron'
 
 type EmotionState = 'normal' | 'suspicious' | 'angry' | 'sleeping'
@@ -19,7 +18,7 @@ export class EmotionManager {
     this.updateEmotion('normal', 'normal')
   }
 
-  // Nuevo método para sincronizar con Pomodoro
+  // New method to synchronize with Pomodoro
   public setPomodoroState(session: string): void {
     const isBreak = ['shortBreak', 'longBreak'].includes(session)
     if (isBreak && !this.isBreakActive) {
@@ -38,7 +37,7 @@ export class EmotionManager {
   }
 
   public manageEmotions(mouseMoved: boolean): void {
-    if (this.isBreakActive) return // Ignorar durante descansos
+    if (this.isBreakActive) return // Ignore while rest
 
     const now = Date.now()
     if (mouseMoved) {
@@ -50,7 +49,7 @@ export class EmotionManager {
 
   private resetToNormal(): void {
     this.forceEmotion('normal')
-    this.lastMovement = Date.now() // Reiniciar temporizadores
+    this.lastMovement = Date.now() // Reset Timer
   }
 
   private handleMovement(timestamp: number): void {

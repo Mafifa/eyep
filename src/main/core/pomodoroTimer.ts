@@ -116,7 +116,7 @@ export default class PomodoroTimer {
   }
 
   private handleSessionEnd(): void {
-    // Incrementar contador de la sesión actual
+    // Increment current session counter
     switch (this.state.currentSession) {
       case 'work':
         this.state.workCount++
@@ -129,17 +129,17 @@ export default class PomodoroTimer {
         break
     }
 
-    // Determinar siguiente sesión
+    // Determine next session
     if (this.state.currentSession === 'work') {
       this.state.currentSession = this.state.workCount % 4 === 0 ? 'longBreak' : 'shortBreak'
     } else {
       this.state.currentSession = 'work'
     }
 
-    // Configurar tiempo de la nueva sesión
+    // Set new session time
     this.state.timeLeft = this.settings[this.state.currentSession]
 
-    // Lógica de auto-start modificada
+    // Modified auto-start logic
     if (this.settings.autoStart && this.state.currentSession === 'shortBreak') {
       this.startTimer()
     } else {

@@ -78,7 +78,7 @@ export function App () {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Usar e.code para detectar la tecla física
+      // Use e.code to detect the physical key
       if (e.ctrlKey && e.code === 'KeyQ') {
         e.preventDefault()
         const newState = !isTopDraggable

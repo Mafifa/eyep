@@ -38,7 +38,7 @@ export function startCursorTracking(options: CursorTrackerOptions): void {
         topWindow.webContents.send('cursor-position', relativePos)
       }
 
-      onActivity?.(mouseMoved) // Llamada segura
+      onActivity?.(mouseMoved) // Secure Call
     } catch (error) {
       console.error('Cursor tracking error:', error)
     }
