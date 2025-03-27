@@ -98,8 +98,8 @@ function createTopWindow(): Promise<BrowserWindow> {
     const { width } = primaryDisplay.workAreaSize
 
     topWindow = new BrowserWindow({
-      width: 330,
-      height: 250,
+      width: 230,
+      height: 105,
       skipTaskbar: true,
       alwaysOnTop: true,
       frame: false,

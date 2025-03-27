@@ -42,7 +42,7 @@ export function App () {
 
 
   return (
-    <main className="flex flex-col items-center justify-center p-12 scale-75">
+    <main className="flex flex-col items-center justify-center scale-75">
       <div className="relative">
         {/* Eyebrows for different emotions */}
         {(emotion === "angry" || emotion === "suspicious") && (
@@ -69,7 +69,7 @@ export function App () {
         <div
           style={{
             position: 'fixed',
-            bottom: 0, // Posición debajo de la ventana
+            bottom: -30, // Posición debajo de la ventana
             left: '50%',
             transform: 'translateX(-50%)',
             width: 120,
