@@ -1,9 +1,12 @@
-name: Build and Release EyeP
+name: Build and Publish Electron App
 
 on:
   push:
     tags:
       - 'v*'
+
+permissions:
+  contents: write # Permiso para crear/modificar releases
 
 jobs:
   build:
@@ -15,7 +18,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
@@ -23,78 +26,31 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build app for ${{ matrix.os }}
-        run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            npm run build:win
-          else
-            npm run build:mac
-          fi
-        shell: bash
+      - name: Build App
+        run: npm run build:${{ contains(matrix.os, 'windows') && 'win' || 'mac' }}
 
-      - name: Upload artifacts
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: eyep-${{ matrix.os }}
-          path: dist/** # Sube todo el contenido de 'dist/'
-          compression-level: 0 # Evita compresión para preservar estructura
+          name: build-${{ matrix.os }} # Ejemplo: "build-windows-latest"
+          path: |
+            dist/**/*       # Sube todo el contenido de la carpeta dist
+            !dist/**/*.map  # Excluir archivos .map (opcional)
 
-  release:
-    needs: build
+  publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    needs: build # Espera a que ambos builds (Windows y macOS) terminen
     steps:
-      - name: Extract version from tag
-        id: extract_version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          path: artifacts/
 
-      # Extraer artifact de Windows
-      - name: Extract Windows Artifact
-        run: |
-          mkdir -p artifacts/eyep-windows-latest/dist
-          unzip artifacts/eyep-windows-latest.zip -d artifacts/eyep-windows-latest/dist
-
-      # Extraer artifact de macOS
-      - name: Extract macOS Artifact
-        run: |
-          mkdir -p artifacts/eyep-macos-latest/dist
-          unzip artifacts/eyep-macos-latest.zip -d artifacts/eyep-macos-latest/dist
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Create/Update Release and Upload Assets
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            **eyep v${{ env.VERSION }}**  
-            - Mejoras en el temporizador  
-            - Corrección de errores
-
-      # Subir todos los archivos de Windows
-      - name: Upload Windows Assets
-        run: |
-          cd artifacts/eyep-windows-latest/dist
-          for file in *; do
-            gh release upload ${{ github.ref }} "$file" --clobber
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Subir todos los archivos de macOS
-      - name: Upload macOS Assets
-        run: |
-          cd artifacts/eyep-macos-latest/dist
-          for file in *; do
-            gh release upload ${{ github.ref }} "$file" --clobber
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: | # Patrón glob para incluir todo
+            artifacts/**/*
+            !artifacts/**/*.txt  # Ejemplo de exclusión
