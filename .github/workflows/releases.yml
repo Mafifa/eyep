@@ -26,9 +26,9 @@ jobs:
       - name: Build app for ${{ matrix.os }}
         run: |
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            npm run build:win
+            npm run build:win  # Genera en dist/
           else
-            npm run build:mac
+            npm run build:mac  # Genera en dist/
           fi
         shell: bash
 
@@ -36,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: eyep-${{ matrix.os }}
-          path: build/** # <-- Asegura que se incluyan subdirectorios
+          path: dist/** # <-- Ahora usa 'dist/'
 
   release:
     needs: build
@@ -53,10 +53,7 @@ jobs:
         with:
           path: artifacts
 
-      - name: Install GitHub CLI
-        run: npm install -g gh
-
-      - name: Create Release with Notes
+      - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -66,23 +63,36 @@ jobs:
           release_name: Release ${{ github.ref }}
           body: |
             **EyeP v${{ env.VERSION }}**  
-            - Mejoras en el temporizador Pomodoro  
-            - Corrección de errores en Windows/macOS
+            - Fix path in workflow an actions
 
       - name: Upload Windows Assets
-        run: |
-          cd artifacts/eyep-windows-latest # <-- Elimina el subdirectorio /build
-          for file in *; do
-            gh release upload ${{ github.ref }} "$file" --clobber
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/eyep-windows-latest/dist/EyeP Setup ${VERSION}.exe # Ruta a dist/
+          asset_name: EyeP-Setup-${VERSION}.exe
+          asset_content_type: application/x-msdownload
 
       - name: Upload macOS Assets
-        run: |
-          cd artifacts/eyep-macos-latest # <-- Elimina el subdirectorio /build
-          for file in *; do
-            gh release upload ${{ github.ref }} "$file" --clobber
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/eyep-macos-latest/dist/EyeP-${VERSION}.dmg # Ruta a dist/
+          asset_name: EyeP-${VERSION}.dmg
+          asset_content_type: application/octet-stream
+
+      - name: Upload Update Metadata (Windows)
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/eyep-windows-latest/dist/latest.yml
+          asset_name: latest.yml
+          asset_content_type: text/yaml
+
+      - name: Upload Update Metadata (macOS)
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/eyep-macos-latest/dist/latest-mac.yml
+          asset_name: latest-mac.yml
+          asset_content_type: text/yaml
