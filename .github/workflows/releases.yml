@@ -62,23 +62,23 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           body: |
-            **EyeP v${{ env.VERSION }}**  
-            - Fix path in workflow an actions
+            **eyep v${{ env.VERSION }}**  
+            - fix path workflow and actions
 
       - name: Upload Windows Assets
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/eyep-windows-latest/dist/EyeP Setup ${VERSION}.exe # Ruta a dist/
-          asset_name: EyeP-Setup-${VERSION}.exe
+          asset_path: artifacts/eyep-windows-latest/dist/eyep-${VERSION}-setup.exe # Ruta a dist/
+          asset_name: eyep-${VERSION}-setup.exe
           asset_content_type: application/x-msdownload
 
       - name: Upload macOS Assets
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/eyep-macos-latest/dist/EyeP-${VERSION}.dmg # Ruta a dist/
-          asset_name: EyeP-${VERSION}.dmg
+          asset_path: artifacts/eyep-macos-latest/dist/eyep-${VERSION}.dmg # Ruta a dist/
+          asset_name: eyep-${VERSION}.dmg
           asset_content_type: application/octet-stream
 
       - name: Upload Update Metadata (Windows)
