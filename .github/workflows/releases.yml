@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: write # Permiso para crear/modificar releases
+  contents: write # Permiso para modificar releases
 
 jobs:
   build-and-publish:
@@ -14,6 +14,12 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
+        include:
+          - os: windows-latest
+            file_extension: exe
+          - os: macos-latest
+            file_extension: dmg
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,13 +35,16 @@ jobs:
       - name: Build App
         run: npm run build:${{ contains(matrix.os, 'windows') && 'win' || 'mac' }}
 
-      - name: Upload ALL files to GitHub Release
+      - name: Upload ONLY Generated Files to Release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: | # Sube todo el contenido de la carpeta dist
-            dist/**/*
-          tag_name: ${{ github.ref_name }} # Usa el tag del evento (ej: v1.0.0)
+          files: |
+            dist/*.${ { matrix.file_extension } }          # .exe o .dmg
+            dist/*.${ { matrix.file_extension } }.blockmap  # Blockmaps
+            dist/*.yml                                      # Metadata de updates
+            dist/*.zip                                      # Si generas ZIPs
+          tag_name: ${{ github.ref_name }}
           prerelease: false
           draft: false
