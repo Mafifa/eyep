@@ -43,7 +43,10 @@ export function initializeUpdater(window: BrowserWindow) {
   // Error event
   autoUpdater.on('error', (error) => {
     console.error('Error checking for updates:', error)
-    showErrorDialog('Update Error', 'An error occurred while checking for updates.')
+    showErrorDialog(
+      'Update Error',
+      `An error occurred while checking for updates. ${error.message}`
+    )
   })
 
   // Start checking for updates
