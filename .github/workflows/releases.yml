@@ -9,7 +9,7 @@ permissions:
   contents: write # Permiso para crear/modificar releases
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -29,28 +29,13 @@ jobs:
       - name: Build App
         run: npm run build:${{ contains(matrix.os, 'windows') && 'win' || 'mac' }}
 
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-${{ matrix.os }} # Ejemplo: "build-windows-latest"
-          path: |
-            dist/**/*       # Sube todo el contenido de la carpeta dist
-            !dist/**/*.map  # Excluir archivos .map (opcional)
-
-  publish:
-    runs-on: ubuntu-latest
-    needs: build # Espera a que ambos builds (Windows y macOS) terminen
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-
-      - name: Create/Update Release and Upload Assets
+      - name: Upload ALL files to GitHub Release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: | # Patrón glob para incluir todo
-            artifacts/**/*
-            !artifacts/**/*.txt  # Ejemplo de exclusión
+          files: | # Sube todo el contenido de la carpeta dist
+            dist/**/*
+          tag_name: ${{ github.ref_name }} # Usa el tag del evento (ej: v1.0.0)
+          prerelease: false
+          draft: false
