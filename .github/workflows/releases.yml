@@ -26,9 +26,9 @@ jobs:
       - name: Build app for ${{ matrix.os }}
         run: |
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            npm run build:win  # Genera en dist/
+            npm run build:win
           else
-            npm run build:mac  # Genera en dist/
+            npm run build:mac
           fi
         shell: bash
 
@@ -37,7 +37,7 @@ jobs:
         with:
           name: eyep-${{ matrix.os }}
           path: dist/** # Sube todo el contenido de 'dist/'
-          compression-level: 0 # <-- Desactiva la compresión para preservar la estructura
+          compression-level: 0 # Evita compresión para preservar estructura
 
   release:
     needs: build
@@ -54,14 +54,14 @@ jobs:
         with:
           path: artifacts
 
-      - name: Extract artifacts (Windows)
-        if: matrix.os == 'windows-latest'
+      # Extraer artifact de Windows
+      - name: Extract Windows Artifact
         run: |
           mkdir -p artifacts/eyep-windows-latest/dist
           unzip artifacts/eyep-windows-latest.zip -d artifacts/eyep-windows-latest/dist
 
-      - name: Extract artifacts (macOS)
-        if: matrix.os == 'macos-latest'
+      # Extraer artifact de macOS
+      - name: Extract macOS Artifact
         run: |
           mkdir -p artifacts/eyep-macos-latest/dist
           unzip artifacts/eyep-macos-latest.zip -d artifacts/eyep-macos-latest/dist
@@ -79,7 +79,8 @@ jobs:
             - Mejoras en el temporizador  
             - Corrección de errores
 
-      - name: Upload All Windows Assets
+      # Subir todos los archivos de Windows
+      - name: Upload Windows Assets
         run: |
           cd artifacts/eyep-windows-latest/dist
           for file in *; do
@@ -88,7 +89,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload All macOS Assets
+      # Subir todos los archivos de macOS
+      - name: Upload macOS Assets
         run: |
           cd artifacts/eyep-macos-latest/dist
           for file in *; do

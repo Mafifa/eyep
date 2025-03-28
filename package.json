@@ -1,6 +1,6 @@
 {
   "name": "eyep",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "A pomodoro app with Eyes tracker your mouse",
   "main": "./out/main/index.js",
   "author": "Mafifa",
