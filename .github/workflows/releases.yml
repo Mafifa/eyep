@@ -32,6 +32,7 @@ jobs:
           else
             npm run build:linux
           fi
+        shell: bash # <-- Esto es clave para Windows
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
