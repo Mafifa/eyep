@@ -36,13 +36,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: eyep-${{ matrix.os }}
-          path: build/
+          path: build/** # <-- Asegura que se incluyan subdirectorios
 
   release:
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Solo este permiso es necesario
+      contents: write
     steps:
       - name: Extract version from tag
         id: extract_version
@@ -66,11 +66,12 @@ jobs:
           release_name: Release ${{ github.ref }}
           body: |
             **EyeP v${{ env.VERSION }}**  
-            - Delete Changelog
+            - Mejoras en el temporizador Pomodoro  
+            - Corrección de errores en Windows/macOS
 
       - name: Upload Windows Assets
         run: |
-          cd artifacts/eyep-windows-latest/build
+          cd artifacts/eyep-windows-latest # <-- Elimina el subdirectorio /build
           for file in *; do
             gh release upload ${{ github.ref }} "$file" --clobber
           done
@@ -79,7 +80,7 @@ jobs:
 
       - name: Upload macOS Assets
         run: |
-          cd artifacts/eyep-macos-latest/build
+          cd artifacts/eyep-macos-latest # <-- Elimina el subdirectorio /build
           for file in *; do
             gh release upload ${{ github.ref }} "$file" --clobber
           done
