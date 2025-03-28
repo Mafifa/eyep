@@ -1,98 +1,31 @@
-name: Build and Release EyeP
+name: Build/release
 
-on:
-  push:
-    tags:
-      - 'v*'
+on: push
 
 jobs:
-  build:
+  release:
     runs-on: ${{ matrix.os }}
+
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
     steps:
-      - name: Checkout code
+      - name: Check out Git repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 20
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build app for ${{ matrix.os }}
-        run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            npm run build:win  # Genera en dist/
-          else
-            npm run build:mac  # Genera en dist/
-          fi
-        shell: bash
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Build/release Electron app
+        uses: daltonmenezes/action-electron-builder@v1
         with:
-          name: eyep-${{ matrix.os }}
-          path: dist/** # <-- Ahora usa 'dist/'
+          # GitHub token, automatically provided to the action
+          # (No need to define this secret in the repo settings)
+          github_token: ${{ secrets.github_token }}
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Extract version from tag
-        id: extract_version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            **eyep v${{ env.VERSION }}**  
-            - fix path workflow and actions
-
-      - name: Upload Windows Assets
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/eyep-windows-latest/dist/eyep-${VERSION}-setup.exe # Ruta a dist/
-          asset_name: eyep-${VERSION}-setup.exe
-          asset_content_type: application/x-msdownload
-
-      - name: Upload macOS Assets
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/eyep-macos-latest/dist/eyep-${VERSION}.dmg # Ruta a dist/
-          asset_name: eyep-${VERSION}.dmg
-          asset_content_type: application/octet-stream
-
-      - name: Upload Update Metadata (Windows)
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/eyep-windows-latest/dist/latest.yml
-          asset_name: latest.yml
-          asset_content_type: text/yaml
-
-      - name: Upload Update Metadata (macOS)
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/eyep-macos-latest/dist/latest-mac.yml
-          asset_name: latest-mac.yml
-          asset_content_type: text/yaml
+          # If the commit is tagged with a version (e.g. "v1.0.0"),
+          # release the app after building
+          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
