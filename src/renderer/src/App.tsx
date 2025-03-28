@@ -45,7 +45,10 @@ export function App () {
   }, [])
 
   useEffect(() => {
-    window.api.getInitialState().then(setState)
+    window.api.getInitialState().then((state) => {
+      setState(state)
+      setIsDarkMode(state?.settings.darkMode as boolean)
+    })
     window.api.onUpdate(setState)
     window.api.onTransparencyChanged(setIsTransparent)
 

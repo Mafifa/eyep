@@ -23,9 +23,21 @@ let trayManager: TrayManager
 
 function createMainWindow(): Promise<BrowserWindow> {
   return new Promise((resolve) => {
+    const { screen } = require('electron')
+    const primaryDisplay = screen.getPrimaryDisplay()
+    const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize
+
+    const windowWidth = 540
+    const windowHeight = 310
+
+    const x = Math.round((screenWidth - windowWidth) / 2)
+    const y = Math.round((screenHeight - windowHeight) / 2)
+
     mainWindow = new BrowserWindow({
-      width: 540,
-      height: 310,
+      width: windowWidth,
+      height: windowHeight,
+      x: x,
+      y: y,
       maxHeight: 310,
       maxWidth: 540,
       show: false,
@@ -114,7 +126,7 @@ function createTopWindow(): Promise<BrowserWindow> {
     topWindow.setIgnoreMouseEvents(true, { forward: true })
 
     const x = Math.round((width - 330) / 2)
-    const y = -50
+    const y = 0
     topWindow.setPosition(x, y)
 
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {

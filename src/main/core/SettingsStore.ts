@@ -4,7 +4,8 @@ const schema: PomodoroSettings = {
   work: 1500,
   shortBreak: 300,
   longBreak: 900,
-  autoStart: true
+  autoStart: true,
+  darkMode: true
 }
 
 export default class SettingsStore {

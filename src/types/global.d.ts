@@ -17,6 +17,7 @@ declare global {
     shortBreak: number
     longBreak: number
     autoStart: boolean
+    darkMode: boolean
   }
 
   interface PomodoroState {
