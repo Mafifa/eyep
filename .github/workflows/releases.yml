@@ -1,31 +1,98 @@
-name: Build/release
+name: Build and Release EyeP
 
-on: push
+on:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
-  release:
+  build:
     runs-on: ${{ matrix.os }}
-
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
-
+        os: [windows-latest, macos-latest]
     steps:
-      - name: Check out Git repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Node.js, NPM and Yarn
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '18'
 
-      - name: Build/release Electron app
-        uses: daltonmenezes/action-electron-builder@v1.0.1
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app for ${{ matrix.os }}
+        run: |
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            npm run build:win  # Genera en dist/
+          else
+            npm run build:mac  # Genera en dist/
+          fi
+        shell: bash
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
+          name: eyep-${{ matrix.os }}
+          path: dist/** # Sube todo el contenido de 'dist/'
+          compression-level: 0 # <-- Desactiva la compresión para preservar la estructura
 
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Extract version from tag
+        id: extract_version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Extract artifacts (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir -p artifacts/eyep-windows-latest/dist
+          unzip artifacts/eyep-windows-latest.zip -d artifacts/eyep-windows-latest/dist
+
+      - name: Extract artifacts (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir -p artifacts/eyep-macos-latest/dist
+          unzip artifacts/eyep-macos-latest.zip -d artifacts/eyep-macos-latest/dist
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            **eyep v${{ env.VERSION }}**  
+            - Mejoras en el temporizador  
+            - Corrección de errores
+
+      - name: Upload All Windows Assets
+        run: |
+          cd artifacts/eyep-windows-latest/dist
+          for file in *; do
+            gh release upload ${{ github.ref }} "$file" --clobber
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload All macOS Assets
+        run: |
+          cd artifacts/eyep-macos-latest/dist
+          for file in *; do
+            gh release upload ${{ github.ref }} "$file" --clobber
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
