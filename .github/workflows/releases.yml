@@ -3,14 +3,14 @@ name: Build and Release EyeP
 on:
   push:
     tags:
-      - 'v*' # Ej: v1.0.0
+      - 'v*'
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest] # Delete ubuntu-latest
+        os: [windows-latest, macos-latest]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -41,6 +41,8 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Solo este permiso es necesario
     steps:
       - name: Extract version from tag
         id: extract_version
@@ -62,7 +64,9 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          body_path: CHANGELOG.md
+          body: |
+            **EyeP v${{ env.VERSION }}**  
+            - Delete Changelog
 
       - name: Upload Windows Assets
         run: |
