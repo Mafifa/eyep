@@ -1,6 +1,6 @@
 {
   "name": "eyep",
-  "version": "1.1.9",
+  "version": "1.2.0",
   "description": "A pomodoro app with Eyes tracker your mouse",
   "main": "./out/main/index.js",
   "author": {
@@ -30,8 +30,8 @@
     "build": "npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
-    "build:win": "npm run build && electron-builder --win",
-    "build:mac": "electron-vite build && electron-builder --mac"
+    "build:mac": "electron-vite build && electron-builder --mac -p always",
+    "build:win": "npm run build && electron-builder --win -p always"
   },
   "dependencies": {
     "@electron-toolkit/preload": "3.0.1",
