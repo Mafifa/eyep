@@ -37,7 +37,7 @@ jobs:
 
       - name: Build Electron App
         env:
-          GH_TOKEN: ${{ secrets.GB_TOKEN }} # Cambia aquí el nombre del secreto
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Cambia aquí el nombre del secreto
         run: |
           npm run ${{ matrix.build-script }}
 
@@ -78,7 +78,7 @@ jobs:
         if: ${{ env.EXISTS == '' }}
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GB_TOKEN }} # Cambia aquí el nombre del secreto
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Cambia aquí el nombre del secreto
         with:
           tag_name: ${{ env.VERSION_TAG }}
           name: Release ${{ env.VERSION_TAG }}
