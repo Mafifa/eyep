@@ -1,34 +1,81 @@
-# pomodoro-2
+<div align="center">
 
-An Electron application with React and TypeScript
+# EyeP👀
 
-## Recommended IDE Setup
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/mafifa/eyep?style=for-the-badge)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/mafifa/eyep/releases.yml?style=for-the-badge)
+![GitHub issues](https://img.shields.io/github/issues/mafifa/eyep?style=for-the-badge)
+![GitHub stars](https://img.shields.io/github/stars/mafifa/eyep?style=for-the-badge)
+![GitHub forks](https://img.shields.io/github/forks/mafifa/eyep?style=for-the-badge)
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+</div>
 
-## Project Setup
+<div align="center">
+<img src="resources/icon.png" alt="EyeP Icon" width="180" style="border-radius: 15px;">
+</div>
 
-### Install
+**EyeP** is a modern Pomodoro timer application built with **Electron**, **React**, and **TypeScript**. It helps you stay productive by managing your work and break intervals effectively. The application also includes advanced features like emotion tracking, cursor tracking, and system tray integration.
 
-```bash
-$ npm install
+---
+
+## Features ✨
+
+- ⏱️ **Pomodoro Timer**: Manage your work and break intervals with ease.
+- 😊 **Emotion Tracking**: Monitor your emotions during work sessions.
+- 🖱️ **Cursor Tracking**: Track cursor activity to analyze productivity.
+- 🖥️ **System Tray Integration**: Minimize the app to the system tray for seamless background operation.
+- 🌍 **Cross-Platform**: Available for Windows, macOS, and Linux.
+- 🪟 **Customizable Transparency**: Toggle window transparency for a distraction-free experience.
+
+---
+
+## Screenshots 📸
+
+<div align="center">
+<img src="resources/pomodoro-main.png" alt="EyeP Icon" style="border-radius: 15px;">
+</div>
+
+<div align="center">
+<img src="resources/eyes-normal.png" width="130" alt="EyeP Icon" style="border-radius: 15px;">
+<img src="resources/suspicius.png" width="130" alt="EyeP Icon" style="border-radius: 15px;">
+<img src="resources/angry.png" width="130" alt="EyeP Icon" style="border-radius: 15px;">
+</div>
+
+---
+
+## Download 🚀
+
+You can download the latest version of **EyeP** from the [Releases Page](https://github.com/mafifa/eyep/releases).
+
+---
+
+## File Structure 📂
+
+```plaintext
+├── build/                  # Build resources (icons, entitlements, etc.)
+├── src/                    # Source code
+│   ├── main/               # Main process code
+│   ├── preload/            # Preload scripts
+│   ├── renderer/           # Renderer process code
+├── .vscode/                # VSCode configuration
+├── electron-builder.yml    # Electron Builder configuration
+├── package.json            # Project metadata and scripts
+└── README.md               # Project documentation
 ```
 
-### Development
+GitHub Copilot
+Aquí tienes el README actualizado con las modificaciones solicitadas, manteniendo la sección de estructura de archivos:
 
-```bash
-$ npm run dev
-```
+# Contributing 🤝
 
-### Build
+We welcome contributions! Follow these simple steps:
 
-```bash
-# For windows
-$ npm run build:win
+- 🍴 Fork the repository.
+- 🛠️ Make your changes in a new branch.
+- 📥 Submit a pull request with a clear description of your changes.
 
-# For macOS
-$ npm run build:mac
+<div align="center">
 
-# For Linux
-$ npm run build:linux
-```
+### **Enjoy using EyeP! 🎉**
+
+</div>
