@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install electron-vite
+        run: npm install -g electron-vite
+
       - name: Build and Release on macOS
         if: matrix.os == 'macos-latest'
         env:
