@@ -1,4 +1,4 @@
-appId: com.eyep.app
+appId: com.mafifa.eyep.app
 productName: eyep
 directories:
   buildResources: build
@@ -39,5 +39,7 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://github.com/Mafifa/eyep
+  provider: github
+  url: https://github.com/Mafifa/eyep.git
+  owner: Mafifa
+  repo: eyep

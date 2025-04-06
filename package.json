@@ -1,9 +1,23 @@
 {
   "name": "eyep",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "A pomodoro app with Eyes tracker your mouse",
   "main": "./out/main/index.js",
-  "author": "Mafifa",
+  "author": {
+    "name": "Mafifa",
+    "email": "mafifacu@gmail.com",
+    "url": "https://github.com/mafifa/eyep"
+  },
+  "build": {
+    "appId": "com.mafifa.eyep.app",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Mafifa",
+        "repo": "eyep"
+      }
+    ]
+  },
   "homepage": "https://github.com/Mafifa/eyep",
   "scripts": {
     "format": "prettier --write .",
@@ -17,8 +31,7 @@
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
-    "build:mac": "electron-vite build && electron-builder --mac",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:mac": "electron-vite build && electron-builder --mac"
   },
   "dependencies": {
     "@electron-toolkit/preload": "3.0.1",
