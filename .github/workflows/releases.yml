@@ -17,9 +17,9 @@ jobs:
         os: [macos-latest, windows-latest]
         include:
           - os: macos-latest
-            build-script: build:mac
+            build-script: release:mac
           - os: windows-latest
-            build-script: build:win
+            build-script: release:win
 
     steps:
       - uses: actions/checkout@v4

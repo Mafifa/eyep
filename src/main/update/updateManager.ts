@@ -1,5 +1,6 @@
 import { BrowserWindow, dialog } from 'electron'
 import { autoUpdater } from 'electron-updater'
+import { net } from 'electron'
 
 // Variable to store the main window
 let mainWindow: BrowserWindow | null = null
@@ -65,7 +66,7 @@ async function showUpdateDialog(title: string, message: string): Promise<number>
   }
 
   const options: Electron.MessageBoxOptions = {
-    type: 'question', // Explicitly specify the type as 'question'
+    type: 'question',
     buttons: ['Yes', 'No'],
     defaultId: 0,
     title,
@@ -89,8 +90,45 @@ function showErrorDialog(title: string, message: string): void {
 }
 
 /**
- * Checks for available updates.
+ * Checks if there is an active internet connection.
+ * @returns A promise that resolves to true if there is a connection, false otherwise.
  */
-function checkForUpdates() {
-  autoUpdater.checkForUpdates()
+async function checkInternetConnection(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const request = net.request('https://www.google.com')
+    request.on('response', (response) => {
+      resolve(response.statusCode === 200)
+    })
+    request.on('error', () => {
+      resolve(false)
+    })
+    request.end()
+  })
+}
+
+/**
+ * Checks for available updates only if there is an internet connection.
+ */
+async function checkForUpdates() {
+  try {
+    const isConnected = await checkInternetConnection()
+
+    if (!isConnected) {
+      console.log('No internet connection. Skipping update check.')
+      showErrorDialog(
+        'No Internet Connection',
+        'Unable to check for updates. Please connect to the internet and try again.'
+      )
+      return
+    }
+
+    console.log('Checking for updates...')
+    await autoUpdater.checkForUpdates()
+  } catch (error) {
+    console.error('Error during update check:', error)
+    showErrorDialog(
+      'Update Check Error',
+      `An unexpected error occurred while checking for updates. ${error}`
+    )
+  }
 }
